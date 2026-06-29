@@ -163,46 +163,321 @@ function buildWeekDays(planId, weekNum) {
 // ============================================================
 
 const todayKey=()=>{const d=new Date();const y=d.getFullYear();const m=String(d.getMonth()+1).padStart(2,"0");const day=String(d.getDate()).padStart(2,"0");return`${y}-${m}-${day}`;};const dateKey=d=>{const y=d.getFullYear();const m=String(d.getMonth()+1).padStart(2,"0");const day=String(d.getDate()).padStart(2,"0");return`${y}-${m}-${day}`;};const emptyGoals={calories:2000,protein:150,carbs:200,fat:65};const LIGHT={blue:"#2e6b3a",blueDark:"#1f4a28",blueLight:"#e8f3e8",green:"#2e6b3a",greenLight:"#e8f3e8",orange:"#c9883a",orangeLight:"#f5ede0",red:"#b84040",redLight:"#f5e8e8",purple:"#5a6ab0",purpleLight:"#eaecf8",bg:"#f4f7f2",card:"#ffffff",border:"#ddeadd",text:"#1a2e1e",textMid:"#4a6a50",textLight:"#7a9a7e"};const DARK={blue:"#4aac5c",blueDark:"#2e7a40",blueLight:"#1a3020",green:"#4aac5c",greenLight:"#1a3020",orange:"#d4944a",orangeLight:"#2a1e0a",red:"#d45555",redLight:"#2a1010",purple:"#7a8acc",purpleLight:"#1a1e30",bg:"#0f1a12",card:"#1a2e1e",border:"#2a4030",text:"#e8f3e8",textMid:"#9abaa0",textLight:"#5a7a60"};const inputStyle={width:"100%",background:"#f0f5f0",border:"1.5px solid #ddeadd",borderRadius:12,padding:"13px 16px",color:"#1a2e1e",fontSize:17,outline:"none",boxSizing:"border-box",fontFamily:"inherit",transition:"border-color 0.2s"};function MacroCircle({value,goal,color,label,unit="",textColor,C}){const pct=Math.min(value/goal*100,100);const over=value>goal;const r=26,circ=2*Math.PI*r;const tc=textColor||(C?C.text:"#1a2e1e");const tcLight=textColor?"rgba(255,255,255,0.7)":C?C.textLight:"#7a9a7e";const tcMid=textColor?"rgba(255,255,255,0.9)":C?C.textMid:"#4a6a50";const trackColor=textColor?"rgba(255,255,255,0.2)":C?C.border:"#ddeadd";const red=C?C.red:"#b84040";return React.createElement("div",{style:{display:"flex",flexDirection:"column",alignItems:"center",gap:4}},React.createElement("div",{style:{position:"relative",width:64,height:64}},React.createElement("svg",{width:64,height:64,viewBox:"0 0 64 64"},React.createElement("circle",{cx:32,cy:32,r:r,fill:"none",stroke:trackColor,strokeWidth:5}),React.createElement("circle",{cx:32,cy:32,r:r,fill:"none",stroke:over?red:color,strokeWidth:5,strokeDasharray:`${pct/100*circ} ${circ}`,strokeDashoffset:circ*0.25,strokeLinecap:"round",style:{transition:"stroke-dasharray 0.5s ease"}})),React.createElement("div",{style:{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}},React.createElement("div",{style:{fontSize:15,fontWeight:900,color:over?"#ffcdd2":tc,lineHeight:1}},Math.round(value)),React.createElement("div",{style:{fontSize:12,color:tcLight,fontWeight:600}},unit||"g"))),React.createElement("div",{style:{fontSize:12,fontWeight:800,color:tcMid,textTransform:"uppercase",letterSpacing:0.5}},label),React.createElement("div",{style:{fontSize:13,color:tcLight}},goal,unit||"g"));}function WorkoutPlanTab({ C, showToast, haptic }) {
+
   const [assignedPlanId, setAssignedPlanId] = React.useState(null);
-  const [loading, setLoading] = React.useState(true);
-  const [uid, setUid] = React.useState(null);
+  const [planProgress,   setPlanProgress]   = React.useState({});
+  const [selectedWeek,   setSelectedWeek]   = React.useState(1);
+  const [expandedDay,    setExpandedDay]    = React.useState(null);
+  const [guidedDay,      setGuidedDay]      = React.useState(null);
+  const [guidedStep,     setGuidedStep]     = React.useState(0);
+  const [completedSets,  setCompletedSets]  = React.useState({});
+  const [loading,        setLoading]        = React.useState(true);
+  const [uid,            setUid]            = React.useState(null);
+  const [adminView,      setAdminView]      = React.useState(false);
+  const [allUsers,       setAllUsers]       = React.useState({});
+  const [assignEmail,    setAssignEmail]    = React.useState("");
+  const [assignPlanId,   setAssignPlanId]   = React.useState("8wk-fat-loss-run");
+
+  const ADMIN_UID = "Zb0aByrvCMSlff0JjCU2Lz6nz1P2";
 
   React.useEffect(() => {
     const unsub = firebase.auth().onAuthStateChanged(user => {
       if (!user) { setLoading(false); return; }
       setUid(user.uid);
+      // Save name for admin lookup
+      db.ref("userNames/" + user.uid).set({ name: user.displayName || user.email, email: user.email || "" });
+      // Load assigned plan
       db.ref("userPlanAssignments/" + user.uid).on("value", snap => {
         setAssignedPlanId(snap.val() || null);
         setLoading(false);
+      });
+      // Load progress
+      db.ref("userPlanProgress/" + user.uid).on("value", snap => {
+        setPlanProgress(snap.val() || {});
       });
     });
     return () => unsub();
   }, []);
 
-  if (loading) return React.createElement("div", {style:{padding:20,color:C.textMid,textAlign:"center"}},
-    React.createElement("div", {style:{fontSize:32,marginBottom:8}}, "⏳"),
-    "Loading your plan..."
+  // Admin: load all users
+  React.useEffect(() => {
+    if (uid !== ADMIN_UID) return;
+    const ref = db.ref("userPlanAssignments");
+    ref.on("value", async snap => {
+      const assignments = snap.val() || {};
+      const users = {};
+      for (const [id, planId] of Object.entries(assignments)) {
+        users[id] = { planId };
+      }
+      const namesSnap = await db.ref("userNames").get();
+      const names = namesSnap.val() || {};
+      const progressSnap = await db.ref("userPlanProgress").get();
+      const allProgress = progressSnap.val() || {};
+      for (const id of Object.keys(users)) {
+        users[id].name = names[id]?.name || id.slice(0,8) + "...";
+        users[id].email = names[id]?.email || "";
+        users[id].progress = allProgress[id] || {};
+      }
+      setAllUsers(users);
+    });
+    return () => db.ref("userPlanAssignments").off();
+  }, [uid]);
+
+  const isDayDone = (planId, weekNum, dayIdx) => !!(planProgress[planId]?.[weekNum]?.[dayIdx]);
+
+  const markDayDone = async (planId, weekNum, dayIdx) => {
+    await db.ref("userPlanProgress/" + uid + "/" + planId + "/" + weekNum + "/" + dayIdx).set(Date.now());
+    showToast("Day marked complete! 💪");
+    haptic("success");
+  };
+
+  const clearDayDone = async (planId, weekNum, dayIdx) => {
+    await db.ref("userPlanProgress/" + uid + "/" + planId + "/" + weekNum + "/" + dayIdx).remove();
+    haptic("light");
+  };
+
+  const assignPlan = async () => {
+    if (!assignEmail.trim()) return;
+    const snap = await db.ref("userNames").orderByChild("email").equalTo(assignEmail.trim().toLowerCase()).get();
+    const data = snap.val();
+    if (!data) { showToast("User not found — they need to sign in first", "error"); return; }
+    const targetUid = Object.keys(data)[0];
+    await db.ref("userPlanAssignments/" + targetUid).set(assignPlanId);
+    showToast("Plan assigned to " + (data[targetUid].name || assignEmail) + " ✓");
+    setAssignEmail("");
+    haptic("success");
+  };
+
+  const removePlan = async (targetUid) => {
+    await db.ref("userPlanAssignments/" + targetUid).remove();
+    showToast("Plan removed");
+  };
+
+  const toggleSet = (key) => {
+    setCompletedSets(prev => ({ ...prev, [key]: !prev[key] }));
+    haptic("light");
+  };
+
+  const plan = assignedPlanId ? WORKOUT_PLAN_DATA[assignedPlanId] : null;
+  const days = plan ? buildWeekDays(assignedPlanId, selectedWeek) : [];
+
+  const getPhase = (w) => {
+    if (!plan) return null;
+    return plan.phases.find(p => p.weeks.includes(w)) || plan.phases[0];
+  };
+  const phase = getPhase(selectedWeek);
+
+  const totalDone = plan ? Object.values(planProgress[assignedPlanId] || {}).flatMap(w => Object.values(w)).filter(Boolean).length : 0;
+  const weekDone = days.filter((_, i) => isDayDone(assignedPlanId, selectedWeek, i)).length;
+
+  const tagColors = {
+    strength: { bg: "rgba(245,166,35,0.15)", color: "#d4944a", label: "Strength" },
+    run:      { bg: "rgba(76,175,80,0.15)",  color: "#4caf50", label: "Run"      },
+    circuit:  { bg: "rgba(232,82,26,0.15)",  color: "#e8521a", label: "Circuit"  },
+    active:   { bg: "rgba(74,158,255,0.12)", color: "#4a9eff", label: "Recovery" },
+    rest:     { bg: C.border,                color: C.textLight, label: "Rest"   },
+  };
+
+  // ── NOT SIGNED IN ─────────────────────────────────────────
+  if (loading) return React.createElement("div", {style:{textAlign:"center",padding:"60px 20px",color:C.textLight}},
+    React.createElement("div", {style:{fontSize:36,marginBottom:10}}, "⏳"),
+    React.createElement("div", {style:{fontSize:15,fontWeight:700}}, "Loading your plan...")
   );
 
-  if (!uid) return React.createElement("div", {style:{padding:20,color:C.textMid,textAlign:"center"}},
-    "Sign in to see your plan."
+  if (!uid) return React.createElement("div", {style:{textAlign:"center",padding:"60px 20px",color:C.textLight}},
+    React.createElement("div", {style:{fontSize:48,marginBottom:12}}, "📋"),
+    React.createElement("div", {style:{fontSize:18,fontWeight:800,color:C.textMid,marginBottom:6}}, "Sign in to access your plan")
   );
 
-  if (!assignedPlanId) return React.createElement("div", {style:{padding:20,color:C.textMid,textAlign:"center"}},
-    React.createElement("div", {style:{fontSize:32,marginBottom:8}}, "🏋️"),
-    React.createElement("div", {style:{fontWeight:800,marginBottom:4}}, "No plan assigned yet"),
-    React.createElement("div", {style:{fontSize:13}}, "Your coach will assign your plan — check back soon")
+  if (!assignedPlanId) return React.createElement("div", {style:{textAlign:"center",padding:"60px 20px",color:C.textLight}},
+    React.createElement("div", {style:{fontSize:48,marginBottom:12}}, "🏋️"),
+    React.createElement("div", {style:{fontSize:18,fontWeight:800,color:C.textMid,marginBottom:6}}, "No plan assigned yet"),
+    React.createElement("div", {style:{fontSize:14}}, "Your coach will assign your plan — check back soon")
   );
 
-  const plan = WORKOUT_PLAN_DATA[assignedPlanId];
-  if (!plan) return React.createElement("div", {style:{padding:20,color:C.red}},
-    "Plan not found: " + assignedPlanId
-  );
+  // ── ADMIN VIEW ────────────────────────────────────────────
+  if (uid === ADMIN_UID && adminView) {
+    return React.createElement("div", {style:{animation:"fadeIn 0.2s ease"}},
+      React.createElement("div", {style:{background:C.blue,borderRadius:14,padding:"14px 16px",marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center"}},
+        React.createElement("div", null,
+          React.createElement("div", {style:{fontSize:12,color:"rgba(255,255,255,0.7)",fontWeight:700,textTransform:"uppercase",letterSpacing:1}}, "Admin"),
+          React.createElement("div", {style:{fontSize:18,fontWeight:900,color:"#fff"}}, "Plan Management")
+        ),
+        React.createElement("button", {onClick:()=>setAdminView(false), style:{background:"rgba(255,255,255,0.2)",border:"none",color:"#fff",padding:"8px 14px",borderRadius:10,fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}, "← My Plan")
+      ),
+      React.createElement("div", {style:{background:C.card,border:"1px solid "+C.border,borderRadius:14,padding:16,marginBottom:14}},
+        React.createElement("div", {style:{fontSize:14,fontWeight:800,color:C.text,marginBottom:12}}, "Assign Plan to User"),
+        React.createElement("input", {placeholder:"their@email.com (must have signed in once)",value:assignEmail,onChange:e=>setAssignEmail(e.target.value),style:{width:"100%",background:C.bg,border:"1.5px solid "+C.border,borderRadius:10,padding:"10px 14px",color:C.text,fontSize:14,outline:"none",boxSizing:"border-box",fontFamily:"inherit",marginBottom:10}}),
+        React.createElement("div", {style:{display:"flex",gap:8,flexWrap:"wrap",marginBottom:12}},
+          Object.values(WORKOUT_PLAN_DATA).map(p =>
+            React.createElement("button", {key:p.id,onClick:()=>setAssignPlanId(p.id),style:{padding:"8px 14px",borderRadius:10,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit",border:assignPlanId===p.id?"2px solid "+C.blue:"1.5px solid "+C.border,background:assignPlanId===p.id?C.blue+"15":C.bg,color:assignPlanId===p.id?C.blue:C.textMid}}, p.name)
+          )
+        ),
+        React.createElement("button", {onClick:assignPlan,style:{width:"100%",padding:"12px",borderRadius:12,border:"none",background:C.blue,color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"inherit"}}, "Assign Plan →")
+      ),
+      React.createElement("div", {style:{fontSize:14,fontWeight:800,color:C.text,marginBottom:10}}, "Active Users (" + Object.keys(allUsers).length + ")"),
+      Object.keys(allUsers).length === 0
+        ? React.createElement("div", {style:{textAlign:"center",padding:"24px 0",color:C.textLight,fontSize:14}}, "No plans assigned yet")
+        : Object.entries(allUsers).map(([id, user]) => {
+            const userPlan = WORKOUT_PLAN_DATA[user.planId];
+            const doneCount = Object.values(user.progress[user.planId] || {}).flatMap(w => Object.values(w)).filter(Boolean).length;
+            const pct = userPlan ? Math.round(doneCount / (userPlan.totalWeeks * 5) * 100) : 0;
+            return React.createElement("div", {key:id,style:{background:C.card,border:"1px solid "+C.border,borderRadius:14,padding:"14px 16px",marginBottom:10}},
+              React.createElement("div", {style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}},
+                React.createElement("div", null,
+                  React.createElement("div", {style:{fontSize:15,fontWeight:800,color:C.text}}, user.name),
+                  React.createElement("div", {style:{fontSize:12,color:C.textLight}}, user.email),
+                  React.createElement("div", {style:{fontSize:12,color:C.blue,fontWeight:700,marginTop:3}}, userPlan?.name || user.planId)
+                ),
+                React.createElement("button", {onClick:()=>removePlan(id),style:{background:C.border,border:"none",color:C.textLight,width:28,height:28,borderRadius:8,fontSize:14,cursor:"pointer",fontFamily:"inherit"}}, "×")
+              ),
+              React.createElement("div", {style:{display:"flex",alignItems:"center",gap:10}},
+                React.createElement("div", {style:{flex:1,height:6,background:C.border,borderRadius:99,overflow:"hidden"}},
+                  React.createElement("div", {style:{height:"100%",width:pct+"%",background:C.green,borderRadius:99}})
+                ),
+                React.createElement("div", {style:{fontSize:12,fontWeight:800,color:C.textMid,whiteSpace:"nowrap"}}, doneCount + " days done")
+              )
+            );
+          })
+    );
+  }
 
-  return React.createElement("div", {style:{padding:16}},
-    React.createElement("div", {style:{fontSize:18,fontWeight:800,color:C.text,marginBottom:8}}, "✅ " + plan.name),
-    React.createElement("div", {style:{fontSize:13,color:C.textMid}}, "Plan loaded! Full UI deploying next."),
-    React.createElement("div", {style:{fontSize:11,color:C.textLight,marginTop:4}}, "uid: " + uid)
+  // ── GUIDED MODE ───────────────────────────────────────────
+  if (guidedDay !== null && plan) {
+    const day = days[guidedDay];
+    const allExercises = day.sections.flatMap((sec, si) => sec.exercises.map((ex, ei) => ({ ...ex, secTitle: sec.title, si, ei })));
+    const current = allExercises[guidedStep];
+    const isLast = guidedStep >= allExercises.length - 1;
+    const isRun = day.tag === "run";
+    const setCount = isRun ? 1 : (parseInt(current?.sets) || 3);
+    const doneCount = Array.from({length:setCount}, (_,i) => completedSets[guidedDay+"-"+current?.si+"-"+current?.ei+"-"+i]).filter(Boolean).length;
+    const allSetsDone = doneCount >= setCount;
+
+    return React.createElement("div", {style:{animation:"fadeIn 0.2s ease"}},
+      React.createElement("div", {style:{background:phase.color,borderRadius:16,padding:16,marginBottom:14,display:"flex",alignItems:"center",justifyContent:"space-between"}},
+        React.createElement("div", null,
+          React.createElement("div", {style:{fontSize:11,color:"rgba(255,255,255,0.7)",fontWeight:700,textTransform:"uppercase",letterSpacing:1}}, "Week "+selectedWeek+" · "+phase.name),
+          React.createElement("div", {style:{fontSize:19,fontWeight:900,color:"#fff",marginTop:2}}, day.name)
+        ),
+        React.createElement("button", {onClick:()=>{setGuidedDay(null);setGuidedStep(0);setCompletedSets({});},style:{background:"rgba(255,255,255,0.2)",border:"none",color:"#fff",width:36,height:36,borderRadius:99,fontSize:18,cursor:"pointer",fontFamily:"inherit"}}, "✕")
+      ),
+      React.createElement("div", {style:{display:"flex",gap:4,marginBottom:20}},
+        allExercises.map((_,i) => React.createElement("div", {key:i,style:{flex:1,height:5,borderRadius:99,background:i<guidedStep?phase.color:i===guidedStep?C.blue:C.border,transition:"background 0.2s"}}))
+      ),
+      React.createElement("div", {style:{fontSize:11,fontWeight:800,color:C.textLight,textTransform:"uppercase",letterSpacing:2,marginBottom:8}}, current.secTitle),
+      React.createElement("div", {style:{background:C.card,border:"2px solid "+(allSetsDone?C.green:C.blue)+"33",borderRadius:18,padding:20,marginBottom:14}},
+        React.createElement("div", {style:{fontSize:11,color:C.textLight,fontWeight:700,marginBottom:4}}, (guidedStep+1)+" of "+allExercises.length),
+        React.createElement("div", {style:{fontSize:22,fontWeight:900,color:C.text,marginBottom:4}}, current.name),
+        React.createElement("div", {style:{fontSize:14,color:C.textMid,marginBottom:current.note?10:16}}, isRun?current.sets+" "+current.reps:current.sets+" sets × "+current.reps),
+        current.note && React.createElement("div", {style:{fontSize:13,color:C.blue,fontWeight:700,background:C.blue+"15",borderRadius:10,padding:"8px 12px",marginBottom:16}}, "💡 "+current.note),
+        !isRun && React.createElement("div", null,
+          React.createElement("div", {style:{fontSize:12,color:C.textLight,fontWeight:700,marginBottom:8}}, doneCount+" / "+setCount+" sets done"),
+          React.createElement("div", {style:{display:"flex",gap:8,flexWrap:"wrap"}},
+            Array.from({length:setCount}, (_,i) => {
+              const k = guidedDay+"-"+current.si+"-"+current.ei+"-"+i;
+              const done = !!completedSets[k];
+              return React.createElement("button", {key:i,onClick:()=>toggleSet(k),style:{width:56,height:56,borderRadius:14,cursor:"pointer",fontFamily:"inherit",fontWeight:900,fontSize:18,transition:"all 0.15s",background:done?C.green:C.bg,color:done?"#fff":C.textMid,border:done?"none":"2px solid "+C.border}}, done?"✓":(i+1));
+            })
+          )
+        ),
+        isRun && React.createElement("button", {onClick:()=>toggleSet(guidedDay+"-"+current.si+"-"+current.ei+"-0"),style:{width:"100%",padding:16,borderRadius:14,cursor:"pointer",fontFamily:"inherit",fontWeight:900,fontSize:18,transition:"all 0.15s",background:completedSets[guidedDay+"-"+current.si+"-"+current.ei+"-0"]?C.green:C.bg,color:completedSets[guidedDay+"-"+current.si+"-"+current.ei+"-0"]?"#fff":C.textMid,border:"2px solid "+(completedSets[guidedDay+"-"+current.si+"-"+current.ei+"-0"]?C.green:C.border)}}, completedSets[guidedDay+"-"+current.si+"-"+current.ei+"-0"]?"✓ Done":"Tap when complete")
+      ),
+      React.createElement("div", {style:{display:"flex",gap:10}},
+        guidedStep>0 && React.createElement("button", {onClick:()=>setGuidedStep(s=>s-1),style:{flex:1,padding:14,borderRadius:14,border:"1.5px solid "+C.border,background:C.card,color:C.textMid,fontWeight:800,fontSize:15,cursor:"pointer",fontFamily:"inherit"}}, "← Back"),
+        React.createElement("button", {onClick:()=>{if(isLast){markDayDone(assignedPlanId,selectedWeek,guidedDay);setGuidedDay(null);setGuidedStep(0);setCompletedSets({});}else{setGuidedStep(s=>s+1);haptic("light");}},style:{flex:2,padding:14,borderRadius:14,border:"none",background:isLast?C.green:C.blue,color:"#fff",fontWeight:900,fontSize:16,cursor:"pointer",fontFamily:"inherit"}}, isLast?"✓ Finish Workout":"Next →")
+      ),
+      day.tip && React.createElement("div", {style:{background:C.orange+"15",border:"1px solid "+C.orange+"25",borderRadius:12,padding:"10px 14px",marginTop:14,fontSize:12,color:C.textMid}},
+        React.createElement("span", {style:{color:C.orange,fontWeight:800}}, "Coach tip: "), day.tip
+      )
+    );
+  }
+
+  // ── MAIN PLAN VIEW ────────────────────────────────────────
+  return React.createElement("div", {style:{animation:"fadeIn 0.2s ease"}},
+    React.createElement("div", {style:{background:C.card,border:"1px solid "+C.border,borderRadius:14,padding:"14px 16px",marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center"}},
+      React.createElement("div", null,
+        React.createElement("div", {style:{fontSize:11,color:C.textLight,fontWeight:700,textTransform:"uppercase",letterSpacing:0.5}}, plan?.name || "Your Plan"),
+        React.createElement("div", {style:{fontSize:13,color:C.textMid,marginTop:2}}, totalDone+" workouts completed")
+      ),
+      uid===ADMIN_UID && React.createElement("button", {onClick:()=>setAdminView(true),style:{padding:"8px 14px",borderRadius:10,border:"1.5px solid "+C.blue,background:C.blue+"15",color:C.blue,fontWeight:800,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}, "⚙ Manage Users")
+    ),
+    React.createElement("div", {style:{display:"flex",gap:3,marginBottom:6}},
+      Array.from({length:plan?.totalWeeks||8}, (_,i) => {
+        const w=i+1; const p=getPhase(w);
+        const done=days.filter((_,di)=>isDayDone(assignedPlanId,w,di)).length;
+        return React.createElement("div", {key:w,style:{flex:1,height:6,borderRadius:3,background:w<selectedWeek&&done>0?p?.color:w===selectedWeek?C.blue:C.border}});
+      })
+    ),
+    React.createElement("div", {style:{fontSize:11,color:C.textLight,fontWeight:600,marginBottom:14}}, "Week "+selectedWeek+" of "+(plan?.totalWeeks||8)+" · "+(phase?.name||"")+" Phase"),
+    React.createElement("div", {style:{display:"flex",gap:5,marginBottom:14,flexWrap:"wrap"}},
+      Array.from({length:plan?.totalWeeks||8}, (_,i) => {
+        const w=i+1; const p=getPhase(w);
+        const done=[0,1,2,3,4,5,6].filter(di=>isDayDone(assignedPlanId,w,di)).length;
+        return React.createElement("button", {key:w,onClick:()=>{setSelectedWeek(w);setExpandedDay(null);},style:{flex:"1 1 calc(12.5% - 5px)",padding:"8px 4px",borderRadius:10,cursor:"pointer",fontFamily:"inherit",border:selectedWeek===w?"2px solid "+(p?.color||C.blue):"1px solid "+C.border,background:selectedWeek===w?(p?.color||C.blue)+"20":C.card,color:selectedWeek===w?(p?.color||C.blue):C.textMid,fontWeight:900,fontSize:13,display:"flex",flexDirection:"column",alignItems:"center",gap:3}},
+          React.createElement("div", null, "W"+w),
+          done>0 && React.createElement("div", {style:{fontSize:9,color:p?.color,fontWeight:800}}, done+"/7")
+        );
+      })
+    ),
+    React.createElement("div", {style:{marginBottom:12}},
+      React.createElement("div", {style:{display:"flex",alignItems:"center",gap:8,marginBottom:4}},
+        React.createElement("div", {style:{fontSize:20,fontWeight:900,color:C.text}}, "Week "+selectedWeek),
+        phase && React.createElement("div", {style:{fontSize:11,fontWeight:800,textTransform:"uppercase",letterSpacing:1,padding:"3px 8px",borderRadius:99,background:(phase.color||C.blue)+"20",color:phase.color||C.blue}}, phase.name)
+      ),
+      React.createElement("div", {style:{fontSize:13,color:C.textMid}}, plan?.weekFocus?.[selectedWeek]||""),
+      weekDone>0 && React.createElement("div", {style:{fontSize:12,color:C.green,fontWeight:700,marginTop:4}}, "✓ "+weekDone+"/7 days complete this week")
+    ),
+    days.map((day, dayIdx) => {
+      const isExpanded = expandedDay===dayIdx;
+      const done = isDayDone(assignedPlanId, selectedWeek, dayIdx);
+      const tag = tagColors[day.tag]||tagColors.rest;
+      const hasContent = day.sections.length>0;
+      return React.createElement("div", {key:dayIdx,style:{background:C.card,border:"1px solid "+(done?C.green:C.border),borderRadius:14,marginBottom:8,overflow:"hidden",opacity:day.tag==="rest"?0.65:1}},
+        React.createElement("div", {style:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"13px 14px",cursor:hasContent?"pointer":"default"},onClick:()=>hasContent&&setExpandedDay(isExpanded?null:dayIdx)},
+          React.createElement("div", {style:{display:"flex",alignItems:"center",gap:10}},
+            React.createElement("div", {style:{fontSize:11,fontWeight:800,textTransform:"uppercase",letterSpacing:1.5,color:C.textLight,minWidth:28}}, day.label),
+            React.createElement("div", null,
+              React.createElement("div", {style:{fontSize:15,fontWeight:800,color:C.text,lineHeight:1.2}}, day.name),
+              day.duration && React.createElement("div", {style:{fontSize:12,color:C.textLight,marginTop:1}}, day.duration)
+            ),
+            React.createElement("div", {style:{fontSize:11,fontWeight:700,padding:"2px 8px",borderRadius:99,background:tag.bg,color:tag.color}}, tag.label)
+          ),
+          React.createElement("div", {style:{display:"flex",alignItems:"center",gap:8}},
+            done && React.createElement("div", {style:{fontSize:16}}, "✅"),
+            hasContent && React.createElement("div", {style:{color:C.textLight,fontSize:12,transition:"transform 0.2s",transform:isExpanded?"rotate(180deg)":"none"}}, "▼")
+          )
+        ),
+        isExpanded && React.createElement("div", {style:{borderTop:"1px solid "+C.border,padding:"0 14px 14px"}},
+          day.warmup && React.createElement("div", null,
+            React.createElement("div", {style:{fontSize:11,fontWeight:800,textTransform:"uppercase",letterSpacing:1.5,color:C.blue,marginTop:12,marginBottom:6}}, "Warm-Up"),
+            React.createElement("div", {style:{fontSize:13,color:C.textMid,background:C.blue+"10",borderRadius:8,padding:"8px 12px"}}, day.warmup)
+          ),
+          day.sections.map((sec,si) =>
+            React.createElement("div", {key:si},
+              React.createElement("div", {style:{fontSize:11,fontWeight:800,textTransform:"uppercase",letterSpacing:1.5,color:day.tag==="run"?C.green:C.orange,marginTop:12,marginBottom:6}}, sec.title),
+              sec.exercises.map((ex,ei) =>
+                React.createElement("div", {key:ei,style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:"9px 10px",background:C.bg,borderRadius:10,marginBottom:6,borderLeft:"3px solid "+(day.tag==="run"?C.green:day.tag==="strength"?C.orange:C.blue)}},
+                  React.createElement("div", null,
+                    React.createElement("div", {style:{fontSize:14,fontWeight:700,color:C.text}}, ex.name),
+                    ex.note && React.createElement("div", {style:{fontSize:11,color:C.textLight,marginTop:2}}, ex.note)
+                  ),
+                  React.createElement("div", {style:{fontSize:14,fontWeight:800,color:C.text,whiteSpace:"nowrap",marginLeft:10}}, day.tag==="run"?ex.sets+" "+ex.reps:ex.sets+" × "+ex.reps)
+                )
+              )
+            )
+          ),
+          day.tip && React.createElement("div", {style:{background:C.orange+"12",border:"1px solid "+C.orange+"25",borderRadius:10,padding:"9px 12px",marginTop:10,fontSize:12,color:C.textMid}},
+            React.createElement("span", {style:{color:C.orange,fontWeight:800}}, "💡 "), day.tip
+          ),
+          React.createElement("div", {style:{display:"flex",gap:8,marginTop:12}},
+            React.createElement("button", {onClick:()=>{setGuidedDay(dayIdx);setGuidedStep(0);setCompletedSets({});},style:{flex:2,padding:12,borderRadius:12,border:"none",background:C.blue,color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"inherit"}}, "▶ Start Guided"),
+            done
+              ? React.createElement("button", {onClick:()=>clearDayDone(assignedPlanId,selectedWeek,dayIdx),style:{flex:1,padding:12,borderRadius:12,border:"1.5px solid "+C.border,background:C.bg,color:C.textLight,fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}, "Undo ✓")
+              : React.createElement("button", {onClick:()=>markDayDone(assignedPlanId,selectedWeek,dayIdx),style:{flex:1,padding:12,borderRadius:12,border:"1.5px solid "+C.green,background:C.green+"15",color:C.green,fontWeight:800,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}, "Mark Done ✓")
+          )
+        )
+      );
+    })
   );
 }
 
