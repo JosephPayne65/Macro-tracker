@@ -120,6 +120,126 @@ const{useState,useEffect,useRef}=React;const STORAGE_KEY="macro-tracker-data-v2"
       },
     ],
   },
+
+  "8wk-fat-loss-run-v2": {
+    id: "8wk-fat-loss-run-v2",
+    name: "8-Week Fat Loss + Strength + Run (v2)",
+    description: "TRX · Dumbbells · Kettlebells · Bosu Ball · Bands · 5 days/week · 45–60 min",
+    totalWeeks: 8,
+
+    phases: [
+      { weeks: [1,2], name: "Foundation", color: "#4a9eff" },
+      { weeks: [3,4,5,6], name: "Build", color: "#e8521a" },
+      { weeks: [7,8], name: "Peak", color: "#4caf50" },
+    ],
+
+    weekFocus: {
+      1: "Build base movement patterns · Easy aerobic running · Full-body strength",
+      2: "Solidify form · Introduce bosu stability work · Add run volume",
+      3: "Raise intensity · Band resistance work · Interval running",
+      4: "Push circuits harder · Bosu balance challenges · Mid-distance runs",
+      5: "Deload — reduce volume 20%, maintain intensity",
+      6: "Peak strength circuits · Race-pace intervals · Max run volume",
+      7: "Sharpen speed · Short hard efforts · Maintain strength",
+      8: "Peak week · Race-pace confidence · Taper into test day",
+    },
+
+    baseDays: [
+      {
+        label: "MON", name: "Strength A — Lower + Pull", tag: "strength", duration: "50 min",
+        warmup: "5 min: bosu balance holds, leg swings, hip circles",
+        sections: [
+          { title: "Main Lifts", exercises: [
+            { name: "KB Goblet Squat",          sets: "4", reps: "12",    note: "25 lb KB · heels on bosu for added challenge" },
+            { name: "KB Romanian Deadlift",     sets: "3", reps: "12",    note: "53 lb KB · slow eccentric" },
+            { name: "TRX Row",                  sets: "4", reps: "12",    note: "Full retraction at top" },
+            { name: "Band Pull-Apart",          sets: "3", reps: "15",    note: "Medium band · arms straight" },
+            { name: "KB Single-Leg Deadlift",   sets: "3", reps: "10 ea", note: "12 lb KB · stand on flat side of bosu" },
+          ]},
+          { title: "Core Finisher", exercises: [
+            { name: "Bosu Dead Bug",   sets: "3", reps: "10 ea", note: "Lay on dome side · slow and controlled" },
+            { name: "Plank on Bosu",   sets: "3", reps: "40 sec", note: "Hands on flat side of bosu" },
+          ]},
+        ],
+        tip: "The bosu adds instability — start conservative and build confidence before adding load.",
+      },
+      {
+        label: "TUE", name: "Easy Zone 2 Run", tag: "run", duration: "40 min",
+        warmup: null,
+        sections: [
+          { title: "Run", exercises: [
+            { name: "Zone 2 Easy Run", sets: "4–5", reps: "miles", note: "Conversational pace — full sentences throughout" },
+          ]},
+        ],
+        tip: "Zone 2 = ~60–70% max HR. This is fat-burning aerobic base work. Keep it easy.",
+      },
+      {
+        label: "WED", name: "Bosu + Band Metabolic Circuit", tag: "circuit", duration: "45 min",
+        warmup: "5 min dynamic: arm circles, lateral band walks, bosu step-overs",
+        sections: [
+          { title: "Circuit — 3 Rounds (45 sec on / 15 sec rest)", exercises: [
+            { name: "Bosu Squat Jump",           sets: "45s", reps: "×3", note: "Jump onto dome side, control landing" },
+            { name: "TRX Push-Up",               sets: "45s", reps: "×3", note: "Body plank throughout" },
+            { name: "KB Swing",                  sets: "45s", reps: "×3", note: "25 lb · hip hinge power" },
+            { name: "Band Lateral Walk",         sets: "45s", reps: "×3", note: "Medium band above knees · stay low" },
+            { name: "Bosu Mountain Climbers",    sets: "45s", reps: "×3", note: "Hands on flat side · fast feet" },
+          ]},
+          { title: "Abs", exercises: [
+            { name: "TRX Pike",          sets: "3", reps: "10",  note: "Pull hips straight up" },
+            { name: "Band Pallof Press", sets: "3", reps: "12 ea", note: "Light band · anti-rotation core" },
+          ]},
+        ],
+        tip: "2 min rest between rounds. The bosu and band combo spikes heart rate fast — pace yourself.",
+      },
+      {
+        label: "THU", name: "Tempo Run", tag: "run", duration: "40 min",
+        warmup: null,
+        sections: [
+          { title: "Run", exercises: [
+            { name: "Warm-up jog",     sets: "1", reps: "mile",    note: "Easy pace" },
+            { name: "Tempo Intervals", sets: "3", reps: "× 8 min", note: "Comfortably hard · 2 min easy jog between" },
+            { name: "Cool-down jog",   sets: "1", reps: "mile",    note: "Easy pace" },
+          ]},
+        ],
+        tip: "Tempo = ~80–85% max HR. Short sentences only — you can't hold a full conversation.",
+      },
+      {
+        label: "FRI", name: "Strength B — Upper + Core", tag: "strength", duration: "50 min",
+        warmup: "5 min: band shoulder circles, TRX scap retractions, bosu balance",
+        sections: [
+          { title: "Main Lifts", exercises: [
+            { name: "DB Overhead Press on Bosu", sets: "4", reps: "10",    note: "Stand on flat side · light DB to start" },
+            { name: "TRX Chest Press",           sets: "4", reps: "12",    note: "More horizontal = easier" },
+            { name: "KB Single-Arm Row",         sets: "4", reps: "10 ea", note: "53 lb KB · brace core hard" },
+            { name: "Band Face Pull",            sets: "3", reps: "15",    note: "Medium band · external rotation" },
+            { name: "TRX Tricep Extension",      sets: "3", reps: "12",    note: "Body angle controls difficulty" },
+          ]},
+          { title: "Core", exercises: [
+            { name: "Bosu Side Plank",    sets: "3", reps: "30 sec ea", note: "Hip on dome side" },
+            { name: "Band Woodchop",      sets: "3", reps: "12 ea",    note: "Light band · rotate from core" },
+          ]},
+        ],
+        tip: "The bosu overhead press is humbling — reduce weight significantly from floor pressing.",
+      },
+      {
+        label: "SAT", name: "Active Recovery", tag: "active", duration: "30 min",
+        warmup: null,
+        sections: [
+          { title: "Pick One", exercises: [
+            { name: "Easy Walk or Bike Ride",  sets: "25–30", reps: "min", note: "Very low intensity — just move" },
+            { name: "Yoga / Mobility Flow",    sets: "25–30", reps: "min", note: "Focus on hips, hamstrings, thoracic" },
+            { name: "Band Mobility Routine",   sets: "20–30", reps: "min", note: "Hip flexors, chest, shoulders, lats" },
+          ]},
+        ],
+        tip: "Non-negotiable. Active recovery accelerates fat loss and prevents overtraining.",
+      },
+      {
+        label: "SUN", name: "Full Rest", tag: "rest", duration: "",
+        warmup: null, sections: [],
+        tip: "Sleep 7–8 hours. Eat well. Prep food for the week.",
+      },
+    ],
+  },
 };
 
 // Builds a specific week's days with progressive overload applied
@@ -129,7 +249,6 @@ function buildWeekDays(planId, weekNum) {
   const base = JSON.parse(JSON.stringify(plan.baseDays));
 
   if (weekNum === 5) {
-    // Deload
     base[0].sections[0].exercises.forEach(ex => { ex.sets = ex.sets === "4" ? "3" : "2"; });
     base[0].tip = "Deload week. Drop one set per exercise, keep the weight and intensity.";
     base[1].sections[0].exercises[0].sets = "3–4";
@@ -137,14 +256,23 @@ function buildWeekDays(planId, weekNum) {
   }
   if (weekNum >= 3 && weekNum !== 5) {
     base[1].sections[0].exercises[0].sets = weekNum <= 4 ? "5–6" : "6–7";
-    base[0].sections[0].exercises[0].note = "53 lb KB · full depth";
     base[3].sections[0].exercises[1].reps = weekNum <= 4 ? "× 8 min" : "× 10 min";
+    if (planId === "8wk-fat-loss-run") {
+      base[0].sections[0].exercises[0].note = "53 lb KB · full depth";
+    }
+    if (planId === "8wk-fat-loss-run-v2") {
+      base[0].sections[0].exercises[0].note = "53 lb KB · heels on bosu";
+      base[2].sections[0].exercises[1].note = "Heavy band above knees · stay low";
+    }
   }
   if (weekNum >= 6) {
     base[3].name = "Mile Repeats";
     base[3].sections[0].exercises[1] = { name: "Mile Repeats", sets: "5", reps: "× 1 mile", note: "Race pace · 2 min jog recovery" };
     base[3].tip = "Mile repeats build lactate threshold. Hit the same pace every rep.";
     base[1].sections[0].exercises[0].sets = "6–8";
+    if (planId === "8wk-fat-loss-run-v2") {
+      base[2].sections[0].exercises[0].note = "Jump onto bosu, stick the landing — explosive";
+    }
   }
   if (weekNum === 7) {
     base[3].name = "Speed Intervals";
