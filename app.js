@@ -305,6 +305,9 @@ const todayKey=()=>{const d=new Date();const y=d.getFullYear();const m=String(d.
   const [allUsers,       setAllUsers]       = React.useState({});
   const [assignEmail,    setAssignEmail]    = React.useState("");
   const [assignPlanId,   setAssignPlanId]   = React.useState("8wk-fat-loss-run");
+  const [customExercises, setCustomExercises] = React.useState({});
+  const [editingEx,      setEditingEx]      = React.useState(null); // {dayIdx, si, ei, weekNum}
+  const [editForm,       setEditForm]       = React.useState({});
 
   const ADMIN_UID = "Zb0aByrvCMSlff0JjCU2Lz6nz1P2";
 
@@ -312,31 +315,28 @@ const todayKey=()=>{const d=new Date();const y=d.getFullYear();const m=String(d.
     const unsub = firebase.auth().onAuthStateChanged(user => {
       if (!user) { setLoading(false); return; }
       setUid(user.uid);
-      // Save name for admin lookup
       db.ref("userNames/" + user.uid).set({ name: user.displayName || user.email, email: user.email || "" });
-      // Load assigned plan
       db.ref("userPlanAssignments/" + user.uid).on("value", snap => {
         setAssignedPlanId(snap.val() || null);
         setLoading(false);
       });
-      // Load progress
       db.ref("userPlanProgress/" + user.uid).on("value", snap => {
         setPlanProgress(snap.val() || {});
+      });
+      db.ref("userPlanCustom/" + user.uid).on("value", snap => {
+        setCustomExercises(snap.val() || {});
       });
     });
     return () => unsub();
   }, []);
 
-  // Admin: load all users
   React.useEffect(() => {
     if (uid !== ADMIN_UID) return;
     const ref = db.ref("userPlanAssignments");
     ref.on("value", async snap => {
       const assignments = snap.val() || {};
       const users = {};
-      for (const [id, planId] of Object.entries(assignments)) {
-        users[id] = { planId };
-      }
+      for (const [id, planId] of Object.entries(assignments)) users[id] = { planId };
       const namesSnap = await db.ref("userNames").get();
       const names = namesSnap.val() || {};
       const progressSnap = await db.ref("userPlanProgress").get();
@@ -364,13 +364,43 @@ const todayKey=()=>{const d=new Date();const y=d.getFullYear();const m=String(d.
     haptic("light");
   };
 
+  // Custom exercise key: planId/weekNum/dayIdx/si/ei
+  const customKey = (planId, weekNum, dayIdx, si, ei) => planId+"/"+weekNum+"/"+dayIdx+"/"+si+"/"+ei;
+
+  const getExercise = (planId, weekNum, dayIdx, si, ei, defaultEx) => {
+    const k = customKey(planId, weekNum, dayIdx, si, ei);
+    return customExercises[k] || defaultEx;
+  };
+
+  const openEdit = (dayIdx, si, ei, ex) => {
+    setEditingEx({ dayIdx, si, ei });
+    setEditForm({ name: ex.name, sets: ex.sets, reps: ex.reps, note: ex.note || "" });
+  };
+
+  const saveEdit = async () => {
+    if (!editingEx) return;
+    const { dayIdx, si, ei } = editingEx;
+    const k = customKey(assignedPlanId, selectedWeek, dayIdx, si, ei);
+    await db.ref("userPlanCustom/" + uid + "/" + k).set(editForm);
+    setEditingEx(null);
+    showToast("Exercise updated ✓");
+    haptic("success");
+  };
+
+  const resetEdit = async (dayIdx, si, ei) => {
+    const k = customKey(assignedPlanId, selectedWeek, dayIdx, si, ei);
+    await db.ref("userPlanCustom/" + uid + "/" + k).remove();
+    setEditingEx(null);
+    showToast("Reset to default ✓");
+    haptic("light");
+  };
+
   const assignPlan = async () => {
     if (!assignEmail.trim()) return;
     const snap = await db.ref("userNames").orderByChild("email").equalTo(assignEmail.trim().toLowerCase()).get();
-    // Also try original case if lowercase fails
     const snapOrig = !snap.val() ? await db.ref("userNames").orderByChild("email").equalTo(assignEmail.trim()).get() : null;
     const data = snap.val() || (snapOrig && snapOrig.val());
-    if (!data) { showToast("User not found — they need to sign in first", "error"); return; }
+    if (!data) { showToast("User not found — they need to sign in first"); return; }
     const targetUid = Object.keys(data)[0];
     await db.ref("userPlanAssignments/" + targetUid).set(assignPlanId);
     showToast("Plan assigned to " + (data[targetUid].name || assignEmail) + " ✓");
@@ -396,7 +426,6 @@ const todayKey=()=>{const d=new Date();const y=d.getFullYear();const m=String(d.
     return plan.phases.find(p => p.weeks.includes(w)) || plan.phases[0];
   };
   const phase = getPhase(selectedWeek);
-
   const totalDone = plan ? Object.values(planProgress[assignedPlanId] || {}).flatMap(w => Object.values(w)).filter(Boolean).length : 0;
   const weekDone = days.filter((_, i) => isDayDone(assignedPlanId, selectedWeek, i)).length;
 
@@ -408,7 +437,48 @@ const todayKey=()=>{const d=new Date();const y=d.getFullYear();const m=String(d.
     rest:     { bg: C.border,                color: C.textLight, label: "Rest"   },
   };
 
-  // ── NOT SIGNED IN ─────────────────────────────────────────
+  // ── EDIT MODAL ────────────────────────────────────────────
+  const EditModal = () => {
+    if (!editingEx) return null;
+    const { dayIdx, si, ei } = editingEx;
+    const k = customKey(assignedPlanId, selectedWeek, dayIdx, si, ei);
+    const isCustomized = !!customExercises[k];
+    return React.createElement("div", {
+      style: { position:"fixed", top:0, left:0, right:0, bottom:0, background:"rgba(0,0,0,0.6)", zIndex:1000, display:"flex", alignItems:"flex-end", justifyContent:"center" },
+      onClick: (e) => { if (e.target === e.currentTarget) setEditingEx(null); }
+    },
+      React.createElement("div", { style: { background:C.surface||C.card, borderRadius:"20px 20px 0 0", padding:24, width:"100%", maxWidth:480, maxHeight:"85vh", overflowY:"auto" } },
+        React.createElement("div", { style: { display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 } },
+          React.createElement("div", { style: { fontSize:16, fontWeight:800, color:C.text } }, "Edit Exercise"),
+          React.createElement("button", { onClick:()=>setEditingEx(null), style:{ background:C.border, border:"none", color:C.textMid, width:32, height:32, borderRadius:99, fontSize:16, cursor:"pointer", fontFamily:"inherit" } }, "✕")
+        ),
+        ["name","sets","reps","note"].map(field =>
+          React.createElement("div", { key:field, style:{ marginBottom:14 } },
+            React.createElement("div", { style:{ fontSize:11, fontWeight:800, color:C.textLight, textTransform:"uppercase", letterSpacing:1, marginBottom:6 } },
+              field === "name" ? "Exercise Name" : field === "sets" ? "Sets" : field === "reps" ? "Reps / Duration" : "Notes / Weight"
+            ),
+            React.createElement("input", {
+              value: editForm[field] || "",
+              onChange: e => setEditForm(prev => ({ ...prev, [field]: e.target.value })),
+              placeholder: field === "note" ? "e.g. 53 lb KB · slow eccentric" : "",
+              style: { width:"100%", background:C.bg, border:"1.5px solid "+C.border, borderRadius:10, padding:"10px 14px", color:C.text, fontSize:14, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }
+            })
+          )
+        ),
+        React.createElement("div", { style:{ display:"flex", gap:8, marginTop:8 } },
+          isCustomized && React.createElement("button", {
+            onClick: () => resetEdit(dayIdx, si, ei),
+            style: { flex:1, padding:12, borderRadius:12, border:"1.5px solid "+C.border, background:C.bg, color:C.textLight, fontWeight:700, fontSize:13, cursor:"pointer", fontFamily:"inherit" }
+          }, "Reset to Default"),
+          React.createElement("button", {
+            onClick: saveEdit,
+            style: { flex:2, padding:12, borderRadius:12, border:"none", background:C.blue, color:"#fff", fontWeight:800, fontSize:14, cursor:"pointer", fontFamily:"inherit" }
+          }, "Save Changes")
+        )
+      )
+    );
+  };
+
   if (loading) return React.createElement("div", {style:{textAlign:"center",padding:"60px 20px",color:C.textLight}},
     React.createElement("div", {style:{fontSize:36,marginBottom:10}}, "⏳"),
     React.createElement("div", {style:{fontSize:15,fontWeight:700}}, "Loading your plan...")
@@ -416,7 +486,7 @@ const todayKey=()=>{const d=new Date();const y=d.getFullYear();const m=String(d.
 
   if (!uid) return React.createElement("div", {style:{textAlign:"center",padding:"60px 20px",color:C.textLight}},
     React.createElement("div", {style:{fontSize:48,marginBottom:12}}, "📋"),
-    React.createElement("div", {style:{fontSize:18,fontWeight:800,color:C.textMid,marginBottom:6}}, "Sign in to access your plan")
+    React.createElement("div", {style:{fontSize:18,fontWeight:800,color:C.textMid}}, "Sign in to access your plan")
   );
 
   if (!assignedPlanId) return React.createElement("div", {style:{textAlign:"center",padding:"60px 20px",color:C.textLight}},
@@ -433,7 +503,7 @@ const todayKey=()=>{const d=new Date();const y=d.getFullYear();const m=String(d.
           React.createElement("div", {style:{fontSize:12,color:"rgba(255,255,255,0.7)",fontWeight:700,textTransform:"uppercase",letterSpacing:1}}, "Admin"),
           React.createElement("div", {style:{fontSize:18,fontWeight:900,color:"#fff"}}, "Plan Management")
         ),
-        React.createElement("button", {onClick:()=>setAdminView(false), style:{background:"rgba(255,255,255,0.2)",border:"none",color:"#fff",padding:"8px 14px",borderRadius:10,fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}, "← My Plan")
+        React.createElement("button", {onClick:()=>setAdminView(false),style:{background:"rgba(255,255,255,0.2)",border:"none",color:"#fff",padding:"8px 14px",borderRadius:10,fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}, "← My Plan")
       ),
       React.createElement("div", {style:{background:C.card,border:"1px solid "+C.border,borderRadius:14,padding:16,marginBottom:14}},
         React.createElement("div", {style:{fontSize:14,fontWeight:800,color:C.text,marginBottom:12}}, "Assign Plan to User"),
@@ -445,19 +515,19 @@ const todayKey=()=>{const d=new Date();const y=d.getFullYear();const m=String(d.
         ),
         React.createElement("button", {onClick:assignPlan,style:{width:"100%",padding:"12px",borderRadius:12,border:"none",background:C.blue,color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"inherit"}}, "Assign Plan →")
       ),
-      React.createElement("div", {style:{fontSize:14,fontWeight:800,color:C.text,marginBottom:10}}, "Active Users (" + Object.keys(allUsers).length + ")"),
-      Object.keys(allUsers).length === 0
+      React.createElement("div", {style:{fontSize:14,fontWeight:800,color:C.text,marginBottom:10}}, "Active Users ("+Object.keys(allUsers).length+")"),
+      Object.keys(allUsers).length===0
         ? React.createElement("div", {style:{textAlign:"center",padding:"24px 0",color:C.textLight,fontSize:14}}, "No plans assigned yet")
-        : Object.entries(allUsers).map(([id, user]) => {
+        : Object.entries(allUsers).map(([id,user]) => {
             const userPlan = WORKOUT_PLAN_DATA[user.planId];
-            const doneCount = Object.values(user.progress[user.planId] || {}).flatMap(w => Object.values(w)).filter(Boolean).length;
-            const pct = userPlan ? Math.round(doneCount / (userPlan.totalWeeks * 5) * 100) : 0;
+            const doneCount = Object.values(user.progress[user.planId]||{}).flatMap(w=>Object.values(w)).filter(Boolean).length;
+            const pct = userPlan ? Math.round(doneCount/(userPlan.totalWeeks*5)*100) : 0;
             return React.createElement("div", {key:id,style:{background:C.card,border:"1px solid "+C.border,borderRadius:14,padding:"14px 16px",marginBottom:10}},
               React.createElement("div", {style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}},
                 React.createElement("div", null,
                   React.createElement("div", {style:{fontSize:15,fontWeight:800,color:C.text}}, user.name),
                   React.createElement("div", {style:{fontSize:12,color:C.textLight}}, user.email),
-                  React.createElement("div", {style:{fontSize:12,color:C.blue,fontWeight:700,marginTop:3}}, userPlan?.name || user.planId)
+                  React.createElement("div", {style:{fontSize:12,color:C.blue,fontWeight:700,marginTop:3}}, userPlan?.name||user.planId)
                 ),
                 React.createElement("button", {onClick:()=>removePlan(id),style:{background:C.border,border:"none",color:C.textLight,width:28,height:28,borderRadius:8,fontSize:14,cursor:"pointer",fontFamily:"inherit"}}, "×")
               ),
@@ -465,7 +535,7 @@ const todayKey=()=>{const d=new Date();const y=d.getFullYear();const m=String(d.
                 React.createElement("div", {style:{flex:1,height:6,background:C.border,borderRadius:99,overflow:"hidden"}},
                   React.createElement("div", {style:{height:"100%",width:pct+"%",background:C.green,borderRadius:99}})
                 ),
-                React.createElement("div", {style:{fontSize:12,fontWeight:800,color:C.textMid,whiteSpace:"nowrap"}}, doneCount + " days done")
+                React.createElement("div", {style:{fontSize:12,fontWeight:800,color:C.textMid,whiteSpace:"nowrap"}}, doneCount+" days done")
               )
             );
           })
@@ -475,13 +545,16 @@ const todayKey=()=>{const d=new Date();const y=d.getFullYear();const m=String(d.
   // ── GUIDED MODE ───────────────────────────────────────────
   if (guidedDay !== null && plan) {
     const day = days[guidedDay];
-    const allExercises = day.sections.flatMap((sec, si) => sec.exercises.map((ex, ei) => ({ ...ex, secTitle: sec.title, si, ei })));
+    const allExercises = day.sections.flatMap((sec,si) => sec.exercises.map((ex,ei) => {
+      const customEx = getExercise(assignedPlanId, selectedWeek, guidedDay, si, ei, ex);
+      return { ...customEx, secTitle:sec.title, si, ei };
+    }));
     const current = allExercises[guidedStep];
-    const isLast = guidedStep >= allExercises.length - 1;
-    const isRun = day.tag === "run";
-    const setCount = isRun ? 1 : (parseInt(current?.sets) || 3);
-    const doneCount = Array.from({length:setCount}, (_,i) => completedSets[guidedDay+"-"+current?.si+"-"+current?.ei+"-"+i]).filter(Boolean).length;
-    const allSetsDone = doneCount >= setCount;
+    const isLast = guidedStep >= allExercises.length-1;
+    const isRun = day.tag==="run";
+    const setCount = isRun ? 1 : (parseInt(current?.sets)||3);
+    const doneCount = Array.from({length:setCount},(_,i)=>completedSets[guidedDay+"-"+current?.si+"-"+current?.ei+"-"+i]).filter(Boolean).length;
+    const allSetsDone = doneCount>=setCount;
 
     return React.createElement("div", {style:{animation:"fadeIn 0.2s ease"}},
       React.createElement("div", {style:{background:phase.color,borderRadius:16,padding:16,marginBottom:14,display:"flex",alignItems:"center",justifyContent:"space-between"}},
@@ -492,20 +565,26 @@ const todayKey=()=>{const d=new Date();const y=d.getFullYear();const m=String(d.
         React.createElement("button", {onClick:()=>{setGuidedDay(null);setGuidedStep(0);setCompletedSets({});},style:{background:"rgba(255,255,255,0.2)",border:"none",color:"#fff",width:36,height:36,borderRadius:99,fontSize:18,cursor:"pointer",fontFamily:"inherit"}}, "✕")
       ),
       React.createElement("div", {style:{display:"flex",gap:4,marginBottom:20}},
-        allExercises.map((_,i) => React.createElement("div", {key:i,style:{flex:1,height:5,borderRadius:99,background:i<guidedStep?phase.color:i===guidedStep?C.blue:C.border,transition:"background 0.2s"}}))
+        allExercises.map((_,i)=>React.createElement("div", {key:i,style:{flex:1,height:5,borderRadius:99,background:i<guidedStep?phase.color:i===guidedStep?C.blue:C.border,transition:"background 0.2s"}}))
       ),
       React.createElement("div", {style:{fontSize:11,fontWeight:800,color:C.textLight,textTransform:"uppercase",letterSpacing:2,marginBottom:8}}, current.secTitle),
       React.createElement("div", {style:{background:C.card,border:"2px solid "+(allSetsDone?C.green:C.blue)+"33",borderRadius:18,padding:20,marginBottom:14}},
-        React.createElement("div", {style:{fontSize:11,color:C.textLight,fontWeight:700,marginBottom:4}}, (guidedStep+1)+" of "+allExercises.length),
+        React.createElement("div", {style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:4}},
+          React.createElement("div", {style:{fontSize:11,color:C.textLight,fontWeight:700}}, (guidedStep+1)+" of "+allExercises.length),
+          React.createElement("button", {
+            onClick:()=>openEdit(guidedDay, current.si, current.ei, current),
+            style:{background:C.border,border:"none",color:C.textMid,padding:"4px 10px",borderRadius:8,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}
+          }, "✏ Edit")
+        ),
         React.createElement("div", {style:{fontSize:22,fontWeight:900,color:C.text,marginBottom:4}}, current.name),
         React.createElement("div", {style:{fontSize:14,color:C.textMid,marginBottom:current.note?10:16}}, isRun?current.sets+" "+current.reps:current.sets+" sets × "+current.reps),
         current.note && React.createElement("div", {style:{fontSize:13,color:C.blue,fontWeight:700,background:C.blue+"15",borderRadius:10,padding:"8px 12px",marginBottom:16}}, "💡 "+current.note),
         !isRun && React.createElement("div", null,
           React.createElement("div", {style:{fontSize:12,color:C.textLight,fontWeight:700,marginBottom:8}}, doneCount+" / "+setCount+" sets done"),
           React.createElement("div", {style:{display:"flex",gap:8,flexWrap:"wrap"}},
-            Array.from({length:setCount}, (_,i) => {
-              const k = guidedDay+"-"+current.si+"-"+current.ei+"-"+i;
-              const done = !!completedSets[k];
+            Array.from({length:setCount},(_,i)=>{
+              const k=guidedDay+"-"+current.si+"-"+current.ei+"-"+i;
+              const done=!!completedSets[k];
               return React.createElement("button", {key:i,onClick:()=>toggleSet(k),style:{width:56,height:56,borderRadius:14,cursor:"pointer",fontFamily:"inherit",fontWeight:900,fontSize:18,transition:"all 0.15s",background:done?C.green:C.bg,color:done?"#fff":C.textMid,border:done?"none":"2px solid "+C.border}}, done?"✓":(i+1));
             })
           )
@@ -518,21 +597,23 @@ const todayKey=()=>{const d=new Date();const y=d.getFullYear();const m=String(d.
       ),
       day.tip && React.createElement("div", {style:{background:C.orange+"15",border:"1px solid "+C.orange+"25",borderRadius:12,padding:"10px 14px",marginTop:14,fontSize:12,color:C.textMid}},
         React.createElement("span", {style:{color:C.orange,fontWeight:800}}, "Coach tip: "), day.tip
-      )
+      ),
+      React.createElement(EditModal, null)
     );
   }
 
   // ── MAIN PLAN VIEW ────────────────────────────────────────
   return React.createElement("div", {style:{animation:"fadeIn 0.2s ease"}},
+    React.createElement(EditModal, null),
     React.createElement("div", {style:{background:C.card,border:"1px solid "+C.border,borderRadius:14,padding:"14px 16px",marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center"}},
       React.createElement("div", null,
-        React.createElement("div", {style:{fontSize:11,color:C.textLight,fontWeight:700,textTransform:"uppercase",letterSpacing:0.5}}, plan?.name || "Your Plan"),
+        React.createElement("div", {style:{fontSize:11,color:C.textLight,fontWeight:700,textTransform:"uppercase",letterSpacing:0.5}}, plan?.name||"Your Plan"),
         React.createElement("div", {style:{fontSize:13,color:C.textMid,marginTop:2}}, totalDone+" workouts completed")
       ),
       uid===ADMIN_UID && React.createElement("button", {onClick:()=>setAdminView(true),style:{padding:"8px 14px",borderRadius:10,border:"1.5px solid "+C.blue,background:C.blue+"15",color:C.blue,fontWeight:800,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}, "⚙ Manage Users")
     ),
     React.createElement("div", {style:{display:"flex",gap:3,marginBottom:6}},
-      Array.from({length:plan?.totalWeeks||8}, (_,i) => {
+      Array.from({length:plan?.totalWeeks||8},(_,i)=>{
         const w=i+1; const p=getPhase(w);
         const done=days.filter((_,di)=>isDayDone(assignedPlanId,w,di)).length;
         return React.createElement("div", {key:w,style:{flex:1,height:6,borderRadius:3,background:w<selectedWeek&&done>0?p?.color:w===selectedWeek?C.blue:C.border}});
@@ -540,7 +621,7 @@ const todayKey=()=>{const d=new Date();const y=d.getFullYear();const m=String(d.
     ),
     React.createElement("div", {style:{fontSize:11,color:C.textLight,fontWeight:600,marginBottom:14}}, "Week "+selectedWeek+" of "+(plan?.totalWeeks||8)+" · "+(phase?.name||"")+" Phase"),
     React.createElement("div", {style:{display:"flex",gap:5,marginBottom:14,flexWrap:"wrap"}},
-      Array.from({length:plan?.totalWeeks||8}, (_,i) => {
+      Array.from({length:plan?.totalWeeks||8},(_,i)=>{
         const w=i+1; const p=getPhase(w);
         const done=[0,1,2,3,4,5,6].filter(di=>isDayDone(assignedPlanId,w,di)).length;
         return React.createElement("button", {key:w,onClick:()=>{setSelectedWeek(w);setExpandedDay(null);},style:{flex:"1 1 calc(12.5% - 5px)",padding:"8px 4px",borderRadius:10,cursor:"pointer",fontFamily:"inherit",border:selectedWeek===w?"2px solid "+(p?.color||C.blue):"1px solid "+C.border,background:selectedWeek===w?(p?.color||C.blue)+"20":C.card,color:selectedWeek===w?(p?.color||C.blue):C.textMid,fontWeight:900,fontSize:13,display:"flex",flexDirection:"column",alignItems:"center",gap:3}},
@@ -557,9 +638,9 @@ const todayKey=()=>{const d=new Date();const y=d.getFullYear();const m=String(d.
       React.createElement("div", {style:{fontSize:13,color:C.textMid}}, plan?.weekFocus?.[selectedWeek]||""),
       weekDone>0 && React.createElement("div", {style:{fontSize:12,color:C.green,fontWeight:700,marginTop:4}}, "✓ "+weekDone+"/7 days complete this week")
     ),
-    days.map((day, dayIdx) => {
+    days.map((day,dayIdx) => {
       const isExpanded = expandedDay===dayIdx;
-      const done = isDayDone(assignedPlanId, selectedWeek, dayIdx);
+      const done = isDayDone(assignedPlanId,selectedWeek,dayIdx);
       const tag = tagColors[day.tag]||tagColors.rest;
       const hasContent = day.sections.length>0;
       return React.createElement("div", {key:dayIdx,style:{background:C.card,border:"1px solid "+(done?C.green:C.border),borderRadius:14,marginBottom:8,overflow:"hidden",opacity:day.tag==="rest"?0.65:1}},
@@ -585,15 +666,26 @@ const todayKey=()=>{const d=new Date();const y=d.getFullYear();const m=String(d.
           day.sections.map((sec,si) =>
             React.createElement("div", {key:si},
               React.createElement("div", {style:{fontSize:11,fontWeight:800,textTransform:"uppercase",letterSpacing:1.5,color:day.tag==="run"?C.green:C.orange,marginTop:12,marginBottom:6}}, sec.title),
-              sec.exercises.map((ex,ei) =>
-                React.createElement("div", {key:ei,style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:"9px 10px",background:C.bg,borderRadius:10,marginBottom:6,borderLeft:"3px solid "+(day.tag==="run"?C.green:day.tag==="strength"?C.orange:C.blue)}},
-                  React.createElement("div", null,
-                    React.createElement("div", {style:{fontSize:14,fontWeight:700,color:C.text}}, ex.name),
-                    ex.note && React.createElement("div", {style:{fontSize:11,color:C.textLight,marginTop:2}}, ex.note)
+              sec.exercises.map((ex,ei) => {
+                const customEx = getExercise(assignedPlanId, selectedWeek, dayIdx, si, ei, ex);
+                const isCustomized = !!customExercises[customKey(assignedPlanId, selectedWeek, dayIdx, si, ei)];
+                return React.createElement("div", {key:ei,style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:"9px 10px",background:C.bg,borderRadius:10,marginBottom:6,borderLeft:"3px solid "+(isCustomized?C.orange:day.tag==="run"?C.green:day.tag==="strength"?C.orange:C.blue)}},
+                  React.createElement("div", {style:{flex:1}},
+                    React.createElement("div", {style:{display:"flex",alignItems:"center",gap:6}},
+                      React.createElement("div", {style:{fontSize:14,fontWeight:700,color:C.text}}, customEx.name),
+                      isCustomized && React.createElement("div", {style:{fontSize:9,fontWeight:800,color:C.orange,background:C.orange+"20",padding:"1px 5px",borderRadius:4}}, "EDITED")
+                    ),
+                    customEx.note && React.createElement("div", {style:{fontSize:11,color:C.textLight,marginTop:2}}, customEx.note)
                   ),
-                  React.createElement("div", {style:{fontSize:14,fontWeight:800,color:C.text,whiteSpace:"nowrap",marginLeft:10}}, day.tag==="run"?ex.sets+" "+ex.reps:ex.sets+" × "+ex.reps)
-                )
-              )
+                  React.createElement("div", {style:{display:"flex",alignItems:"center",gap:8,marginLeft:8}},
+                    React.createElement("div", {style:{fontSize:14,fontWeight:800,color:C.text,whiteSpace:"nowrap"}}, day.tag==="run"?customEx.sets+" "+customEx.reps:customEx.sets+" × "+customEx.reps),
+                    React.createElement("button", {
+                      onClick:(e)=>{e.stopPropagation();openEdit(dayIdx,si,ei,customEx);},
+                      style:{background:C.border,border:"none",color:C.textMid,width:28,height:28,borderRadius:8,fontSize:13,cursor:"pointer",fontFamily:"inherit",flexShrink:0}
+                    }, "✏")
+                  )
+                );
+              })
             )
           ),
           day.tip && React.createElement("div", {style:{background:C.orange+"12",border:"1px solid "+C.orange+"25",borderRadius:10,padding:"9px 12px",marginTop:10,fontSize:12,color:C.textMid}},
