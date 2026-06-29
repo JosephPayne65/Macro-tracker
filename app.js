@@ -392,12 +392,11 @@ function WorkoutPlanTab({ C, showToast, haptic, saveWorkout, workoutDate }) {
 
   const markDayDone = async (planId, weekNum, dayIdx) => {
     await db.ref("userPlanProgress/" + uid + "/" + planId + "/" + weekNum + "/" + dayIdx).set(Date.now());
-    // Log to workout history
+    // Log directly to localStorage to avoid async state timing issues
     try {
       const plan = WORKOUT_PLAN_DATA[planId];
       const dayData = plan ? buildWeekDays(planId, weekNum)[dayIdx] : null;
-      if (dayData && saveWorkout) {
-        // Build today key directly — don't rely on prop
+      if (dayData) {
         const d = new Date();
         const todayStr = d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
         const exercises = [];
@@ -405,25 +404,35 @@ function WorkoutPlanTab({ C, showToast, haptic, saveWorkout, workoutDate }) {
           sec.exercises.forEach((ex, ei) => {
             const customEx = getExercise(planId, weekNum, dayIdx, si, ei, ex);
             if (dayData.tag === "run" || dayData.tag === "active") {
-              exercises.push({ name: customEx.name, isCardio: true, cardioData: { type: "Other Cardio", notes: customEx.sets + " " + customEx.reps + (customEx.note ? " · " + customEx.note : "") }, sets: [{ done: true }] });
+              exercises.push({ name: customEx.name, isCardio: true, cardioData: { type: "Other Cardio", notes: customEx.sets+" "+customEx.reps+(customEx.note?" · "+customEx.note:"") }, sets: [{ done: true }] });
             } else {
               const setCount = parseInt(customEx.sets) || 3;
-              exercises.push({ name: customEx.name, sets: Array.from({ length: setCount }, () => ({ weight: "", reps: customEx.reps || "", done: true })) });
+              exercises.push({ name: customEx.name, sets: Array.from({ length: setCount }, () => ({ weight: "", reps: customEx.reps||"", done: true })) });
             }
           });
         });
         const phaseName = plan.phases?.find(p => p.weeks.includes(weekNum))?.name || "";
-        saveWorkout({
+        const newWorkout = {
           id: Date.now(),
           type: "workout",
           date: todayStr,
-          name: "Week " + weekNum + " · " + dayData.name,
+          name: "Week "+weekNum+" · "+dayData.name,
           exercises,
-          startTime: Date.now() - 45 * 60 * 1000,
+          startTime: Date.now() - 45*60*1000,
           endTime: Date.now(),
-          notes: "8-Week Plan · " + phaseName,
+          notes: "8-Week Plan · "+phaseName,
           editing: false,
-        });
+        };
+        // Write directly to localStorage so it persists immediately
+        try {
+          const stored = JSON.parse(localStorage.getItem("macro-tracker-data-v2") || "{}");
+          const dayWorkouts = stored.workouts || {};
+          dayWorkouts[todayStr] = [...(dayWorkouts[todayStr] || []), newWorkout];
+          stored.workouts = dayWorkouts;
+          localStorage.setItem("macro-tracker-data-v2", JSON.stringify(stored));
+        } catch(le) { console.error("localStorage write error:", le); }
+        // Also call saveWorkout to update React state for live UI
+        if (saveWorkout) saveWorkout(newWorkout);
       }
     } catch(e) { console.error("Plan log error:", e); }
     showToast("Day marked complete! 💪");
