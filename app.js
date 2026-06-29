@@ -367,7 +367,9 @@ const todayKey=()=>{const d=new Date();const y=d.getFullYear();const m=String(d.
   const assignPlan = async () => {
     if (!assignEmail.trim()) return;
     const snap = await db.ref("userNames").orderByChild("email").equalTo(assignEmail.trim().toLowerCase()).get();
-    const data = snap.val();
+    // Also try original case if lowercase fails
+    const snapOrig = !snap.val() ? await db.ref("userNames").orderByChild("email").equalTo(assignEmail.trim()).get() : null;
+    const data = snap.val() || (snapOrig && snapOrig.val());
     if (!data) { showToast("User not found — they need to sign in first", "error"); return; }
     const targetUid = Object.keys(data)[0];
     await db.ref("userPlanAssignments/" + targetUid).set(assignPlanId);
