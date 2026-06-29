@@ -187,7 +187,10 @@ const todayKey=()=>{const d=new Date();const y=d.getFullYear();const m=String(d.
 
   // ── Firebase sync ─────────────────────────────────────────
   React.useEffect(() => {
-    if (!userId) { setLoading(false); return; }
+    if (!userId) {
+      if (!googleUser) setLoading(false);
+      return;
+    }
 
     // Load this user's assigned plan
     const assignRef = db.ref("userPlanAssignments/" + userId);
@@ -207,7 +210,7 @@ const todayKey=()=>{const d=new Date();const y=d.getFullYear();const m=String(d.
       assignRef.off();
       progressRef.off();
     };
-  }, [userId]);
+  }, [userId, googleUser]);
 
   // Admin: load all user assignments + progress
   React.useEffect(() => {
