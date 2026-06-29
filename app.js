@@ -392,35 +392,40 @@ function WorkoutPlanTab({ C, showToast, haptic, saveWorkout, workoutDate }) {
 
   const markDayDone = async (planId, weekNum, dayIdx) => {
     await db.ref("userPlanProgress/" + uid + "/" + planId + "/" + weekNum + "/" + dayIdx).set(Date.now());
-    // Also log to workout history so it shows in History + stats
-    const plan = WORKOUT_PLAN_DATA[planId];
-    const dayData = plan ? buildWeekDays(planId, weekNum)[dayIdx] : null;
-    if (dayData && saveWorkout) {
-      const exercises = dayData.sections.flatMap((sec, si) =>
-        sec.exercises.map((ex, ei) => {
-          const customEx = getExercise(planId, weekNum, dayIdx, si, ei, ex);
-          if (dayData.tag === "run") {
-            return { name: customEx.name, isCardio: true, cardioData: { type: customEx.name, distance: customEx.sets, notes: customEx.note || "" }, sets: [{ done: true }] };
-          }
-          const setCount = parseInt(customEx.sets) || 3;
-          return {
-            name: customEx.name,
-            sets: Array.from({ length: setCount }, () => ({ weight: customEx.note || "", reps: customEx.reps, done: true }))
-          };
-        })
-      );
-      saveWorkout({
-        id: Date.now(),
-        type: "workout",
-        date: workoutDate,
-        name: "Week " + weekNum + " · " + dayData.name,
-        exercises,
-        startTime: Date.now() - 45 * 60 * 1000,
-        endTime: Date.now(),
-        notes: "8-Week Plan · " + (plan?.phases?.find(p => p.weeks.includes(weekNum))?.name || ""),
-        editing: false,
-      });
-    }
+    // Log to workout history
+    try {
+      const plan = WORKOUT_PLAN_DATA[planId];
+      const dayData = plan ? buildWeekDays(planId, weekNum)[dayIdx] : null;
+      if (dayData && saveWorkout) {
+        // Build today key directly — don't rely on prop
+        const d = new Date();
+        const todayStr = d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+        const exercises = [];
+        dayData.sections.forEach((sec, si) => {
+          sec.exercises.forEach((ex, ei) => {
+            const customEx = getExercise(planId, weekNum, dayIdx, si, ei, ex);
+            if (dayData.tag === "run" || dayData.tag === "active") {
+              exercises.push({ name: customEx.name, isCardio: true, cardioData: { type: "Other Cardio", notes: customEx.sets + " " + customEx.reps + (customEx.note ? " · " + customEx.note : "") }, sets: [{ done: true }] });
+            } else {
+              const setCount = parseInt(customEx.sets) || 3;
+              exercises.push({ name: customEx.name, sets: Array.from({ length: setCount }, () => ({ weight: "", reps: customEx.reps || "", done: true })) });
+            }
+          });
+        });
+        const phaseName = plan.phases?.find(p => p.weeks.includes(weekNum))?.name || "";
+        saveWorkout({
+          id: Date.now(),
+          type: "workout",
+          date: todayStr,
+          name: "Week " + weekNum + " · " + dayData.name,
+          exercises,
+          startTime: Date.now() - 45 * 60 * 1000,
+          endTime: Date.now(),
+          notes: "8-Week Plan · " + phaseName,
+          editing: false,
+        });
+      }
+    } catch(e) { console.error("Plan log error:", e); }
     showToast("Day marked complete! 💪");
     haptic("success");
   };
