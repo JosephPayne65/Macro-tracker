@@ -162,32 +162,47 @@ function buildWeekDays(planId, weekNum) {
 
 // ============================================================
 
-const todayKey=()=>{const d=new Date();const y=d.getFullYear();const m=String(d.getMonth()+1).padStart(2,"0");const day=String(d.getDate()).padStart(2,"0");return`${y}-${m}-${day}`;};const dateKey=d=>{const y=d.getFullYear();const m=String(d.getMonth()+1).padStart(2,"0");const day=String(d.getDate()).padStart(2,"0");return`${y}-${m}-${day}`;};const emptyGoals={calories:2000,protein:150,carbs:200,fat:65};const LIGHT={blue:"#2e6b3a",blueDark:"#1f4a28",blueLight:"#e8f3e8",green:"#2e6b3a",greenLight:"#e8f3e8",orange:"#c9883a",orangeLight:"#f5ede0",red:"#b84040",redLight:"#f5e8e8",purple:"#5a6ab0",purpleLight:"#eaecf8",bg:"#f4f7f2",card:"#ffffff",border:"#ddeadd",text:"#1a2e1e",textMid:"#4a6a50",textLight:"#7a9a7e"};const DARK={blue:"#4aac5c",blueDark:"#2e7a40",blueLight:"#1a3020",green:"#4aac5c",greenLight:"#1a3020",orange:"#d4944a",orangeLight:"#2a1e0a",red:"#d45555",redLight:"#2a1010",purple:"#7a8acc",purpleLight:"#1a1e30",bg:"#0f1a12",card:"#1a2e1e",border:"#2a4030",text:"#e8f3e8",textMid:"#9abaa0",textLight:"#5a7a60"};const inputStyle={width:"100%",background:"#f0f5f0",border:"1.5px solid #ddeadd",borderRadius:12,padding:"13px 16px",color:"#1a2e1e",fontSize:17,outline:"none",boxSizing:"border-box",fontFamily:"inherit",transition:"border-color 0.2s"};function MacroCircle({value,goal,color,label,unit="",textColor,C}){const pct=Math.min(value/goal*100,100);const over=value>goal;const r=26,circ=2*Math.PI*r;const tc=textColor||(C?C.text:"#1a2e1e");const tcLight=textColor?"rgba(255,255,255,0.7)":C?C.textLight:"#7a9a7e";const tcMid=textColor?"rgba(255,255,255,0.9)":C?C.textMid:"#4a6a50";const trackColor=textColor?"rgba(255,255,255,0.2)":C?C.border:"#ddeadd";const red=C?C.red:"#b84040";return React.createElement("div",{style:{display:"flex",flexDirection:"column",alignItems:"center",gap:4}},React.createElement("div",{style:{position:"relative",width:64,height:64}},React.createElement("svg",{width:64,height:64,viewBox:"0 0 64 64"},React.createElement("circle",{cx:32,cy:32,r:r,fill:"none",stroke:trackColor,strokeWidth:5}),React.createElement("circle",{cx:32,cy:32,r:r,fill:"none",stroke:over?red:color,strokeWidth:5,strokeDasharray:`${pct/100*circ} ${circ}`,strokeDashoffset:circ*0.25,strokeLinecap:"round",style:{transition:"stroke-dasharray 0.5s ease"}})),React.createElement("div",{style:{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}},React.createElement("div",{style:{fontSize:15,fontWeight:900,color:over?"#ffcdd2":tc,lineHeight:1}},Math.round(value)),React.createElement("div",{style:{fontSize:12,color:tcLight,fontWeight:600}},unit||"g"))),React.createElement("div",{style:{fontSize:12,fontWeight:800,color:tcMid,textTransform:"uppercase",letterSpacing:0.5}},label),React.createElement("div",{style:{fontSize:13,color:tcLight}},goal,unit||"g"));}function WorkoutPlanTab({ C, userId, userName, googleUser, showToast, haptic }) {
+const todayKey=()=>{const d=new Date();const y=d.getFullYear();const m=String(d.getMonth()+1).padStart(2,"0");const day=String(d.getDate()).padStart(2,"0");return`${y}-${m}-${day}`;};const dateKey=d=>{const y=d.getFullYear();const m=String(d.getMonth()+1).padStart(2,"0");const day=String(d.getDate()).padStart(2,"0");return`${y}-${m}-${day}`;};const emptyGoals={calories:2000,protein:150,carbs:200,fat:65};const LIGHT={blue:"#2e6b3a",blueDark:"#1f4a28",blueLight:"#e8f3e8",green:"#2e6b3a",greenLight:"#e8f3e8",orange:"#c9883a",orangeLight:"#f5ede0",red:"#b84040",redLight:"#f5e8e8",purple:"#5a6ab0",purpleLight:"#eaecf8",bg:"#f4f7f2",card:"#ffffff",border:"#ddeadd",text:"#1a2e1e",textMid:"#4a6a50",textLight:"#7a9a7e"};const DARK={blue:"#4aac5c",blueDark:"#2e7a40",blueLight:"#1a3020",green:"#4aac5c",greenLight:"#1a3020",orange:"#d4944a",orangeLight:"#2a1e0a",red:"#d45555",redLight:"#2a1010",purple:"#7a8acc",purpleLight:"#1a1e30",bg:"#0f1a12",card:"#1a2e1e",border:"#2a4030",text:"#e8f3e8",textMid:"#9abaa0",textLight:"#5a7a60"};const inputStyle={width:"100%",background:"#f0f5f0",border:"1.5px solid #ddeadd",borderRadius:12,padding:"13px 16px",color:"#1a2e1e",fontSize:17,outline:"none",boxSizing:"border-box",fontFamily:"inherit",transition:"border-color 0.2s"};function MacroCircle({value,goal,color,label,unit="",textColor,C}){const pct=Math.min(value/goal*100,100);const over=value>goal;const r=26,circ=2*Math.PI*r;const tc=textColor||(C?C.text:"#1a2e1e");const tcLight=textColor?"rgba(255,255,255,0.7)":C?C.textLight:"#7a9a7e";const tcMid=textColor?"rgba(255,255,255,0.9)":C?C.textMid:"#4a6a50";const trackColor=textColor?"rgba(255,255,255,0.2)":C?C.border:"#ddeadd";const red=C?C.red:"#b84040";return React.createElement("div",{style:{display:"flex",flexDirection:"column",alignItems:"center",gap:4}},React.createElement("div",{style:{position:"relative",width:64,height:64}},React.createElement("svg",{width:64,height:64,viewBox:"0 0 64 64"},React.createElement("circle",{cx:32,cy:32,r:r,fill:"none",stroke:trackColor,strokeWidth:5}),React.createElement("circle",{cx:32,cy:32,r:r,fill:"none",stroke:over?red:color,strokeWidth:5,strokeDasharray:`${pct/100*circ} ${circ}`,strokeDashoffset:circ*0.25,strokeLinecap:"round",style:{transition:"stroke-dasharray 0.5s ease"}})),React.createElement("div",{style:{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}},React.createElement("div",{style:{fontSize:15,fontWeight:900,color:over?"#ffcdd2":tc,lineHeight:1}},Math.round(value)),React.createElement("div",{style:{fontSize:12,color:tcLight,fontWeight:600}},unit||"g"))),React.createElement("div",{style:{fontSize:12,fontWeight:800,color:tcMid,textTransform:"uppercase",letterSpacing:0.5}},label),React.createElement("div",{style:{fontSize:13,color:tcLight}},goal,unit||"g"));}function WorkoutPlanTab({ C, showToast, haptic }) {
   const [assignedPlanId, setAssignedPlanId] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
+  const [uid, setUid] = React.useState(null);
 
   React.useEffect(() => {
-    if (!userId) return;
-    db.ref("userPlanAssignments/" + userId).get().then(snap => {
-      setAssignedPlanId(snap.val());
-      setLoading(false);
-    }).catch(e => {
-      console.error("Plan load error:", e);
-      setLoading(false);
+    const unsub = firebase.auth().onAuthStateChanged(user => {
+      if (!user) { setLoading(false); return; }
+      setUid(user.uid);
+      db.ref("userPlanAssignments/" + user.uid).on("value", snap => {
+        setAssignedPlanId(snap.val() || null);
+        setLoading(false);
+      });
     });
-  }, [userId]);
+    return () => unsub();
+  }, []);
 
-  if (!googleUser) return React.createElement("div", {style:{padding:20,color:C.textMid}}, "Sign in to see your plan.");
-  if (loading) return React.createElement("div", {style:{padding:20,color:C.textMid}}, "Loading plan...");
-  if (!assignedPlanId) return React.createElement("div", {style:{padding:20,color:C.textMid}}, "No plan assigned yet. userId: " + userId);
+  if (loading) return React.createElement("div", {style:{padding:20,color:C.textMid,textAlign:"center"}},
+    React.createElement("div", {style:{fontSize:32,marginBottom:8}}, "⏳"),
+    "Loading your plan..."
+  );
+
+  if (!uid) return React.createElement("div", {style:{padding:20,color:C.textMid,textAlign:"center"}},
+    "Sign in to see your plan."
+  );
+
+  if (!assignedPlanId) return React.createElement("div", {style:{padding:20,color:C.textMid,textAlign:"center"}},
+    React.createElement("div", {style:{fontSize:32,marginBottom:8}}, "🏋️"),
+    React.createElement("div", {style:{fontWeight:800,marginBottom:4}}, "No plan assigned yet"),
+    React.createElement("div", {style:{fontSize:13}}, "Your coach will assign your plan — check back soon")
+  );
 
   const plan = WORKOUT_PLAN_DATA[assignedPlanId];
-  if (!plan) return React.createElement("div", {style:{padding:20,color:C.red}}, "Plan not found: " + assignedPlanId);
+  if (!plan) return React.createElement("div", {style:{padding:20,color:C.red}},
+    "Plan not found: " + assignedPlanId
+  );
 
   return React.createElement("div", {style:{padding:16}},
-    React.createElement("div", {style:{fontSize:18,fontWeight:800,color:C.text,marginBottom:8}}, plan.name),
-    React.createElement("div", {style:{fontSize:13,color:C.textMid}}, "Plan loaded successfully! Full UI coming next."),
-    React.createElement("div", {style:{fontSize:11,color:C.textLight,marginTop:4}}, "userId: " + userId + " | planId: " + assignedPlanId)
+    React.createElement("div", {style:{fontSize:18,fontWeight:800,color:C.text,marginBottom:8}}, "✅ " + plan.name),
+    React.createElement("div", {style:{fontSize:13,color:C.textMid}}, "Plan loaded! Full UI deploying next."),
+    React.createElement("div", {style:{fontSize:11,color:C.textLight,marginTop:4}}, "uid: " + uid)
   );
 }
 
