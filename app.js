@@ -171,6 +171,13 @@ const{useState,useEffect,useRef}=React;const STORAGE_KEY="macro-tracker-data-v2"
             { name: "Zone 2 Easy Run", sets: "4–5", reps: "miles", note: "Conversational pace — full sentences throughout" },
           ]},
         ],
+        evening: {
+          name: "Evening Run — Half Marathon Build",
+          sections: [{ title: "Evening Run", exercises: [
+            { name: "Run/Walk Intervals", sets: "20", reps: "min total", note: "Run 3 min · walk 2 min · repeat · building toward continuous running" },
+          ]}],
+          tip: "Evening runs are optional but powerful. Even 20 min of easy movement accelerates fat loss.",
+        },
         tip: "Zone 2 = ~60–70% max HR. This is fat-burning aerobic base work. Keep it easy.",
       },
       {
@@ -201,6 +208,13 @@ const{useState,useEffect,useRef}=React;const STORAGE_KEY="macro-tracker-data-v2"
             { name: "Cool-down jog",   sets: "1", reps: "mile",    note: "Easy pace" },
           ]},
         ],
+        evening: {
+          name: "Evening Run — Easy Recovery",
+          sections: [{ title: "Evening Run", exercises: [
+            { name: "Easy Recovery Run", sets: "15–20", reps: "min", note: "Very easy pace · Zone 1–2 only · shakeout run" },
+          ]}],
+          tip: "Keep this one very easy — it flushes lactic acid from the morning session and builds weekly mileage safely.",
+        },
         tip: "Tempo = ~80–85% max HR. Short sentences only — you can't hold a full conversation.",
       },
       {
@@ -284,6 +298,35 @@ function buildWeekDays(planId, weekNum) {
     base[1].sections[0].exercises[0] = { name: "Zone 2 Easy Run", sets: "5", reps: "miles", note: "Taper — keep it easy and fresh" };
     base[1].tip = "Taper week — resist the urge to push hard. Save it for race day.";
   }
+
+  // Progressive evening run overload
+  if (base[1].evening) {
+    const ev = base[1].evening.sections[0].exercises[0];
+    if (weekNum <= 2) {
+      ev.sets = "20"; ev.reps = "min"; ev.note = "Run 3 min · walk 2 min · repeat";
+    } else if (weekNum <= 4) {
+      ev.sets = "25"; ev.reps = "min"; ev.note = "Run 5 min · walk 1 min · repeat";
+    } else if (weekNum === 5) {
+      ev.sets = "20"; ev.reps = "min"; ev.note = "Deload — easy run/walk, no pressure";
+    } else if (weekNum <= 6) {
+      ev.sets = "30"; ev.reps = "min continuous", ev.note = "Continuous easy run · Zone 2 only";
+    } else {
+      ev.sets = "35"; ev.reps = "min continuous"; ev.note = "Steady continuous run · building toward 5K";
+    }
+  }
+  if (base[3].evening) {
+    const ev = base[3].evening.sections[0].exercises[0];
+    if (weekNum <= 2) {
+      ev.sets = "15"; ev.reps = "min"; ev.note = "Very easy walk/jog — Zone 1 only";
+    } else if (weekNum <= 4) {
+      ev.sets = "20"; ev.reps = "min"; ev.note = "Easy jog · Zone 2 · no effort";
+    } else if (weekNum === 5) {
+      ev.sets = "15"; ev.reps = "min"; ev.note = "Deload — short easy shakeout only";
+    } else {
+      ev.sets = "20–25"; ev.reps = "min"; ev.note = "Easy recovery run · stay conversational";
+    }
+  }
+
   return base;
 }
 
@@ -727,6 +770,27 @@ function WorkoutPlanTab({ C, showToast, haptic, saveWorkout, workoutDate }) {
           ),
           day.tip && React.createElement("div", {style:{background:C.orange+"12",border:"1px solid "+C.orange+"25",borderRadius:10,padding:"9px 12px",marginTop:10,fontSize:12,color:C.textMid}},
             React.createElement("span", {style:{color:C.orange,fontWeight:800}}, "💡 "), day.tip
+          ),
+          day.evening && React.createElement("div", {style:{marginTop:14,background:C.bg,borderRadius:12,border:"1.5px solid "+C.blue+"44",overflow:"hidden"}},
+            React.createElement("div", {style:{background:C.blue+"15",padding:"10px 14px",borderBottom:"1px solid "+C.blue+"22",display:"flex",alignItems:"center",gap:8}},
+              React.createElement("div", {style:{fontSize:14,color:C.blue,fontWeight:800}}, "🌙 "+day.evening.name)
+            ),
+            React.createElement("div", {style:{padding:"10px 14px"}},
+              day.evening.sections.map((sec,si) =>
+                React.createElement("div", {key:si},
+                  sec.exercises.map((ex,ei) =>
+                    React.createElement("div", {key:ei,style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:"8px 10px",background:C.card,borderRadius:8,marginBottom:5,borderLeft:"3px solid "+C.blue}},
+                      React.createElement("div", null,
+                        React.createElement("div", {style:{fontSize:13,fontWeight:700,color:C.text}}, ex.name),
+                        ex.note && React.createElement("div", {style:{fontSize:11,color:C.textLight,marginTop:1}}, ex.note)
+                      ),
+                      React.createElement("div", {style:{fontSize:13,fontWeight:800,color:C.text,whiteSpace:"nowrap",marginLeft:8}}, ex.sets+" "+ex.reps)
+                    )
+                  )
+                )
+              ),
+              day.evening.tip && React.createElement("div", {style:{fontSize:11,color:C.blue,marginTop:8,fontStyle:"italic"}}, day.evening.tip)
+            )
           ),
           React.createElement("div", {style:{display:"flex",gap:8,marginTop:12}},
             React.createElement("button", {onClick:()=>{setGuidedDay(dayIdx);setGuidedStep(0);setCompletedSets({});},style:{flex:2,padding:12,borderRadius:12,border:"none",background:C.blue,color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"inherit"}}, "▶ Start Guided"),
