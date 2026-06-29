@@ -51,6 +51,13 @@ const{useState,useEffect,useRef}=React;const STORAGE_KEY="macro-tracker-data-v2"
             { name: "Zone 2 Easy Run", sets: "4–5", reps: "miles", note: "Conversational pace — you should be able to talk in full sentences" },
           ]},
         ],
+        evening: {
+          name: "Evening Run — Half Marathon Build",
+          sections: [{ title: "Evening Run", exercises: [
+            { name: "Run/Walk Intervals", sets: "20", reps: "min total", note: "Run 3 min · walk 2 min · repeat" },
+          ]}],
+          tip: "Evening runs are optional but powerful. Even 20 min of easy movement accelerates fat loss.",
+        },
         tip: "Zone 2 = ~60–70% max HR. This is fat-burning aerobic base work. Resist going faster.",
       },
       {
@@ -81,6 +88,13 @@ const{useState,useEffect,useRef}=React;const STORAGE_KEY="macro-tracker-data-v2"
             { name: "Cool-down jog",    sets: "1",  reps: "mile",    note: "Easy pace" },
           ]},
         ],
+        evening: {
+          name: "Evening Run — Easy Recovery",
+          sections: [{ title: "Evening Run", exercises: [
+            { name: "Easy Recovery Run", sets: "15–20", reps: "min", note: "Very easy pace · Zone 1–2 only · shakeout run" },
+          ]}],
+          tip: "Keep this one very easy — flushes lactic acid and builds weekly mileage safely.",
+        },
         tip: "Tempo = ~80–85% max HR. Short sentences only — you can't hold a full conversation.",
       },
       {
@@ -214,6 +228,13 @@ const{useState,useEffect,useRef}=React;const STORAGE_KEY="macro-tracker-data-v2"
             { name: "Easy Recovery Run", sets: "15–20", reps: "min", note: "Very easy pace · Zone 1–2 only · shakeout run" },
           ]}],
           tip: "Keep this one very easy — it flushes lactic acid from the morning session and builds weekly mileage safely.",
+        },
+        evening: {
+          name: "Evening Run — Easy Recovery",
+          sections: [{ title: "Evening Run", exercises: [
+            { name: "Easy Recovery Run", sets: "15–20", reps: "min", note: "Very easy pace · Zone 1–2 only · shakeout run" },
+          ]}],
+          tip: "Keep this one very easy — flushes lactic acid and builds weekly mileage safely.",
         },
         tip: "Tempo = ~80–85% max HR. Short sentences only — you can't hold a full conversation.",
       },
