@@ -402,7 +402,7 @@ function WorkoutPlanTab({ C, showToast, haptic }) {
   };
 
   // Custom exercise key: planId/weekNum/dayIdx/si/ei
-  const customKey = (planId, weekNum, dayIdx, si, ei) => planId+"/"+weekNum+"/"+dayIdx+"/"+si+"/"+ei;
+  const customKey = (planId, weekNum, dayIdx, si, ei) => planId+"__"+weekNum+"__"+dayIdx+"__"+si+"__"+ei;
 
   const getExercise = (planId, weekNum, dayIdx, si, ei, defaultEx) => {
     const k = customKey(planId, weekNum, dayIdx, si, ei);
