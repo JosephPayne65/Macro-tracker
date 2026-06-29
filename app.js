@@ -290,7 +290,44 @@ function buildWeekDays(planId, weekNum) {
 
 // ============================================================
 
-const todayKey=()=>{const d=new Date();const y=d.getFullYear();const m=String(d.getMonth()+1).padStart(2,"0");const day=String(d.getDate()).padStart(2,"0");return`${y}-${m}-${day}`;};const dateKey=d=>{const y=d.getFullYear();const m=String(d.getMonth()+1).padStart(2,"0");const day=String(d.getDate()).padStart(2,"0");return`${y}-${m}-${day}`;};const emptyGoals={calories:2000,protein:150,carbs:200,fat:65};const LIGHT={blue:"#2e6b3a",blueDark:"#1f4a28",blueLight:"#e8f3e8",green:"#2e6b3a",greenLight:"#e8f3e8",orange:"#c9883a",orangeLight:"#f5ede0",red:"#b84040",redLight:"#f5e8e8",purple:"#5a6ab0",purpleLight:"#eaecf8",bg:"#f4f7f2",card:"#ffffff",border:"#ddeadd",text:"#1a2e1e",textMid:"#4a6a50",textLight:"#7a9a7e"};const DARK={blue:"#4aac5c",blueDark:"#2e7a40",blueLight:"#1a3020",green:"#4aac5c",greenLight:"#1a3020",orange:"#d4944a",orangeLight:"#2a1e0a",red:"#d45555",redLight:"#2a1010",purple:"#7a8acc",purpleLight:"#1a1e30",bg:"#0f1a12",card:"#1a2e1e",border:"#2a4030",text:"#e8f3e8",textMid:"#9abaa0",textLight:"#5a7a60"};const inputStyle={width:"100%",background:"#f0f5f0",border:"1.5px solid #ddeadd",borderRadius:12,padding:"13px 16px",color:"#1a2e1e",fontSize:17,outline:"none",boxSizing:"border-box",fontFamily:"inherit",transition:"border-color 0.2s"};function MacroCircle({value,goal,color,label,unit="",textColor,C}){const pct=Math.min(value/goal*100,100);const over=value>goal;const r=26,circ=2*Math.PI*r;const tc=textColor||(C?C.text:"#1a2e1e");const tcLight=textColor?"rgba(255,255,255,0.7)":C?C.textLight:"#7a9a7e";const tcMid=textColor?"rgba(255,255,255,0.9)":C?C.textMid:"#4a6a50";const trackColor=textColor?"rgba(255,255,255,0.2)":C?C.border:"#ddeadd";const red=C?C.red:"#b84040";return React.createElement("div",{style:{display:"flex",flexDirection:"column",alignItems:"center",gap:4}},React.createElement("div",{style:{position:"relative",width:64,height:64}},React.createElement("svg",{width:64,height:64,viewBox:"0 0 64 64"},React.createElement("circle",{cx:32,cy:32,r:r,fill:"none",stroke:trackColor,strokeWidth:5}),React.createElement("circle",{cx:32,cy:32,r:r,fill:"none",stroke:over?red:color,strokeWidth:5,strokeDasharray:`${pct/100*circ} ${circ}`,strokeDashoffset:circ*0.25,strokeLinecap:"round",style:{transition:"stroke-dasharray 0.5s ease"}})),React.createElement("div",{style:{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}},React.createElement("div",{style:{fontSize:15,fontWeight:900,color:over?"#ffcdd2":tc,lineHeight:1}},Math.round(value)),React.createElement("div",{style:{fontSize:12,color:tcLight,fontWeight:600}},unit||"g"))),React.createElement("div",{style:{fontSize:12,fontWeight:800,color:tcMid,textTransform:"uppercase",letterSpacing:0.5}},label),React.createElement("div",{style:{fontSize:13,color:tcLight}},goal,unit||"g"));}function WorkoutPlanTab({ C, showToast, haptic }) {
+const todayKey=()=>{const d=new Date();const y=d.getFullYear();const m=String(d.getMonth()+1).padStart(2,"0");const day=String(d.getDate()).padStart(2,"0");return`${y}-${m}-${day}`;};const dateKey=d=>{const y=d.getFullYear();const m=String(d.getMonth()+1).padStart(2,"0");const day=String(d.getDate()).padStart(2,"0");return`${y}-${m}-${day}`;};const emptyGoals={calories:2000,protein:150,carbs:200,fat:65};const LIGHT={blue:"#2e6b3a",blueDark:"#1f4a28",blueLight:"#e8f3e8",green:"#2e6b3a",greenLight:"#e8f3e8",orange:"#c9883a",orangeLight:"#f5ede0",red:"#b84040",redLight:"#f5e8e8",purple:"#5a6ab0",purpleLight:"#eaecf8",bg:"#f4f7f2",card:"#ffffff",border:"#ddeadd",text:"#1a2e1e",textMid:"#4a6a50",textLight:"#7a9a7e"};const DARK={blue:"#4aac5c",blueDark:"#2e7a40",blueLight:"#1a3020",green:"#4aac5c",greenLight:"#1a3020",orange:"#d4944a",orangeLight:"#2a1e0a",red:"#d45555",redLight:"#2a1010",purple:"#7a8acc",purpleLight:"#1a1e30",bg:"#0f1a12",card:"#1a2e1e",border:"#2a4030",text:"#e8f3e8",textMid:"#9abaa0",textLight:"#5a7a60"};const inputStyle={width:"100%",background:"#f0f5f0",border:"1.5px solid #ddeadd",borderRadius:12,padding:"13px 16px",color:"#1a2e1e",fontSize:17,outline:"none",boxSizing:"border-box",fontFamily:"inherit",transition:"border-color 0.2s"};function MacroCircle({value,goal,color,label,unit="",textColor,C}){const pct=Math.min(value/goal*100,100);const over=value>goal;const r=26,circ=2*Math.PI*r;const tc=textColor||(C?C.text:"#1a2e1e");const tcLight=textColor?"rgba(255,255,255,0.7)":C?C.textLight:"#7a9a7e";const tcMid=textColor?"rgba(255,255,255,0.9)":C?C.textMid:"#4a6a50";const trackColor=textColor?"rgba(255,255,255,0.2)":C?C.border:"#ddeadd";const red=C?C.red:"#b84040";return React.createElement("div",{style:{display:"flex",flexDirection:"column",alignItems:"center",gap:4}},React.createElement("div",{style:{position:"relative",width:64,height:64}},React.createElement("svg",{width:64,height:64,viewBox:"0 0 64 64"},React.createElement("circle",{cx:32,cy:32,r:r,fill:"none",stroke:trackColor,strokeWidth:5}),React.createElement("circle",{cx:32,cy:32,r:r,fill:"none",stroke:over?red:color,strokeWidth:5,strokeDasharray:`${pct/100*circ} ${circ}`,strokeDashoffset:circ*0.25,strokeLinecap:"round",style:{transition:"stroke-dasharray 0.5s ease"}})),React.createElement("div",{style:{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}},React.createElement("div",{style:{fontSize:15,fontWeight:900,color:over?"#ffcdd2":tc,lineHeight:1}},Math.round(value)),React.createElement("div",{style:{fontSize:12,color:tcLight,fontWeight:600}},unit||"g"))),React.createElement("div",{style:{fontSize:12,fontWeight:800,color:tcMid,textTransform:"uppercase",letterSpacing:0.5}},label),React.createElement("div",{style:{fontSize:13,color:tcLight}},goal,unit||"g"));}function PlanEditModal({ C, editingEx, editForm, setEditForm, onSave, onReset, onClose, isCustomized }) {
+  if (!editingEx) return null;
+  return React.createElement("div", {
+    style: { position:"fixed", top:0, left:0, right:0, bottom:0, background:"rgba(0,0,0,0.6)", zIndex:1000, display:"flex", alignItems:"flex-end", justifyContent:"center" },
+    onClick: (e) => { if (e.target === e.currentTarget) onClose(); }
+  },
+    React.createElement("div", { style: { background:C.card, borderRadius:"20px 20px 0 0", padding:24, width:"100%", maxWidth:480, maxHeight:"85vh", overflowY:"auto" } },
+      React.createElement("div", { style: { display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 } },
+        React.createElement("div", { style: { fontSize:16, fontWeight:800, color:C.text } }, "Edit Exercise"),
+        React.createElement("button", { onClick:onClose, style:{ background:C.border, border:"none", color:C.textMid, width:32, height:32, borderRadius:99, fontSize:16, cursor:"pointer", fontFamily:"inherit" } }, "✕")
+      ),
+      React.createElement("div", { style:{ marginBottom:14 } },
+        React.createElement("div", { style:{ fontSize:11, fontWeight:800, color:C.textLight, textTransform:"uppercase", letterSpacing:1, marginBottom:6 } }, "Exercise Name"),
+        React.createElement("input", { value:editForm.name||"", onChange:e=>setEditForm(p=>({...p,name:e.target.value})), style:{ width:"100%", background:C.bg, border:"1.5px solid "+C.border, borderRadius:10, padding:"10px 14px", color:C.text, fontSize:14, outline:"none", boxSizing:"border-box", fontFamily:"inherit" } })
+      ),
+      React.createElement("div", { style:{ display:"flex", gap:10, marginBottom:14 } },
+        React.createElement("div", { style:{ flex:1 } },
+          React.createElement("div", { style:{ fontSize:11, fontWeight:800, color:C.textLight, textTransform:"uppercase", letterSpacing:1, marginBottom:6 } }, "Sets"),
+          React.createElement("input", { value:editForm.sets||"", onChange:e=>setEditForm(p=>({...p,sets:e.target.value})), style:{ width:"100%", background:C.bg, border:"1.5px solid "+C.border, borderRadius:10, padding:"10px 14px", color:C.text, fontSize:14, outline:"none", boxSizing:"border-box", fontFamily:"inherit" } })
+        ),
+        React.createElement("div", { style:{ flex:1 } },
+          React.createElement("div", { style:{ fontSize:11, fontWeight:800, color:C.textLight, textTransform:"uppercase", letterSpacing:1, marginBottom:6 } }, "Reps / Duration"),
+          React.createElement("input", { value:editForm.reps||"", onChange:e=>setEditForm(p=>({...p,reps:e.target.value})), style:{ width:"100%", background:C.bg, border:"1.5px solid "+C.border, borderRadius:10, padding:"10px 14px", color:C.text, fontSize:14, outline:"none", boxSizing:"border-box", fontFamily:"inherit" } })
+        )
+      ),
+      React.createElement("div", { style:{ marginBottom:14 } },
+        React.createElement("div", { style:{ fontSize:11, fontWeight:800, color:C.textLight, textTransform:"uppercase", letterSpacing:1, marginBottom:6 } }, "Notes / Weight"),
+        React.createElement("input", { value:editForm.note||"", onChange:e=>setEditForm(p=>({...p,note:e.target.value})), placeholder:"e.g. 53 lb KB · slow eccentric", style:{ width:"100%", background:C.bg, border:"1.5px solid "+C.border, borderRadius:10, padding:"10px 14px", color:C.text, fontSize:14, outline:"none", boxSizing:"border-box", fontFamily:"inherit" } })
+      ),
+      React.createElement("div", { style:{ display:"flex", gap:8, marginTop:8 } },
+        isCustomized && React.createElement("button", { onClick:onReset, style:{ flex:1, padding:12, borderRadius:12, border:"1.5px solid "+C.border, background:C.bg, color:C.textLight, fontWeight:700, fontSize:13, cursor:"pointer", fontFamily:"inherit" } }, "Reset to Default"),
+        React.createElement("button", { onClick:onSave, style:{ flex:2, padding:12, borderRadius:12, border:"none", background:C.blue, color:"#fff", fontWeight:800, fontSize:14, cursor:"pointer", fontFamily:"inherit" } }, "Save Changes")
+      )
+    )
+  );
+}
+
+function WorkoutPlanTab({ C, showToast, haptic }) {
 
   const [assignedPlanId, setAssignedPlanId] = React.useState(null);
   const [planProgress,   setPlanProgress]   = React.useState({});
@@ -437,48 +474,6 @@ const todayKey=()=>{const d=new Date();const y=d.getFullYear();const m=String(d.
     rest:     { bg: C.border,                color: C.textLight, label: "Rest"   },
   };
 
-  // ── EDIT MODAL ────────────────────────────────────────────
-  const EditModal = () => {
-    if (!editingEx) return null;
-    const { dayIdx, si, ei } = editingEx;
-    const k = customKey(assignedPlanId, selectedWeek, dayIdx, si, ei);
-    const isCustomized = !!customExercises[k];
-    return React.createElement("div", {
-      style: { position:"fixed", top:0, left:0, right:0, bottom:0, background:"rgba(0,0,0,0.6)", zIndex:1000, display:"flex", alignItems:"flex-end", justifyContent:"center" },
-      onClick: (e) => { if (e.target === e.currentTarget) setEditingEx(null); }
-    },
-      React.createElement("div", { style: { background:C.surface||C.card, borderRadius:"20px 20px 0 0", padding:24, width:"100%", maxWidth:480, maxHeight:"85vh", overflowY:"auto" } },
-        React.createElement("div", { style: { display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 } },
-          React.createElement("div", { style: { fontSize:16, fontWeight:800, color:C.text } }, "Edit Exercise"),
-          React.createElement("button", { onClick:()=>setEditingEx(null), style:{ background:C.border, border:"none", color:C.textMid, width:32, height:32, borderRadius:99, fontSize:16, cursor:"pointer", fontFamily:"inherit" } }, "✕")
-        ),
-        ["name","sets","reps","note"].map(field =>
-          React.createElement("div", { key:field, style:{ marginBottom:14 } },
-            React.createElement("div", { style:{ fontSize:11, fontWeight:800, color:C.textLight, textTransform:"uppercase", letterSpacing:1, marginBottom:6 } },
-              field === "name" ? "Exercise Name" : field === "sets" ? "Sets" : field === "reps" ? "Reps / Duration" : "Notes / Weight"
-            ),
-            React.createElement("input", {
-              value: editForm[field] || "",
-              onChange: e => setEditForm(prev => ({ ...prev, [field]: e.target.value })),
-              placeholder: field === "note" ? "e.g. 53 lb KB · slow eccentric" : "",
-              style: { width:"100%", background:C.bg, border:"1.5px solid "+C.border, borderRadius:10, padding:"10px 14px", color:C.text, fontSize:14, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }
-            })
-          )
-        ),
-        React.createElement("div", { style:{ display:"flex", gap:8, marginTop:8 } },
-          isCustomized && React.createElement("button", {
-            onClick: () => resetEdit(dayIdx, si, ei),
-            style: { flex:1, padding:12, borderRadius:12, border:"1.5px solid "+C.border, background:C.bg, color:C.textLight, fontWeight:700, fontSize:13, cursor:"pointer", fontFamily:"inherit" }
-          }, "Reset to Default"),
-          React.createElement("button", {
-            onClick: saveEdit,
-            style: { flex:2, padding:12, borderRadius:12, border:"none", background:C.blue, color:"#fff", fontWeight:800, fontSize:14, cursor:"pointer", fontFamily:"inherit" }
-          }, "Save Changes")
-        )
-      )
-    );
-  };
-
   if (loading) return React.createElement("div", {style:{textAlign:"center",padding:"60px 20px",color:C.textLight}},
     React.createElement("div", {style:{fontSize:36,marginBottom:10}}, "⏳"),
     React.createElement("div", {style:{fontSize:15,fontWeight:700}}, "Loading your plan...")
@@ -598,13 +593,12 @@ const todayKey=()=>{const d=new Date();const y=d.getFullYear();const m=String(d.
       day.tip && React.createElement("div", {style:{background:C.orange+"15",border:"1px solid "+C.orange+"25",borderRadius:12,padding:"10px 14px",marginTop:14,fontSize:12,color:C.textMid}},
         React.createElement("span", {style:{color:C.orange,fontWeight:800}}, "Coach tip: "), day.tip
       ),
-      React.createElement(EditModal, null)
+      React.createElement(PlanEditModal, {C, editingEx, editForm, setEditForm, onSave:saveEdit, onReset:()=>resetEdit(editingEx.dayIdx,editingEx.si,editingEx.ei), onClose:()=>setEditingEx(null), isCustomized:editingEx&&!!customExercises[customKey(assignedPlanId,selectedWeek,editingEx.dayIdx,editingEx.si,editingEx.ei)]})
     );
   }
 
   // ── MAIN PLAN VIEW ────────────────────────────────────────
   return React.createElement("div", {style:{animation:"fadeIn 0.2s ease"}},
-    React.createElement(EditModal, null),
     React.createElement("div", {style:{background:C.card,border:"1px solid "+C.border,borderRadius:14,padding:"14px 16px",marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center"}},
       React.createElement("div", null,
         React.createElement("div", {style:{fontSize:11,color:C.textLight,fontWeight:700,textTransform:"uppercase",letterSpacing:0.5}}, plan?.name||"Your Plan"),
@@ -699,7 +693,8 @@ const todayKey=()=>{const d=new Date();const y=d.getFullYear();const m=String(d.
           )
         )
       );
-    })
+    }),
+    React.createElement(PlanEditModal, {C, editingEx, editForm, setEditForm, onSave:saveEdit, onReset:()=>resetEdit(editingEx.dayIdx,editingEx.si,editingEx.ei), onClose:()=>setEditingEx(null), isCustomized:editingEx&&!!customExercises[customKey(assignedPlanId,selectedWeek,editingEx.dayIdx,editingEx.si,editingEx.ei)]})
   );
 }
 
