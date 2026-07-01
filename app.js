@@ -887,28 +887,29 @@ function WorkoutPlanTab({ C, showToast, haptic, saveWorkout, workoutDate }) {
               sec.exercises.map((ex,ei) => {
                 const customEx = getExercise(assignedPlanId, selectedWeek, dayIdx, si, ei, ex);
                 const isCustomized = !!customExercises[customKey(assignedPlanId, selectedWeek, dayIdx, si, ei)];
-                return React.createElement("div", {key:ei,style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:"9px 10px",background:C.bg,borderRadius:10,marginBottom:6,borderLeft:"3px solid "+(isCustomized?C.orange:day.tag==="run"?C.green:day.tag==="strength"?C.orange:C.blue)}},
-                  React.createElement("div", {style:{flex:1}},
-                    React.createElement("div", {style:{display:"flex",alignItems:"center",gap:6}},
-                      React.createElement("div", {style:{fontSize:14,fontWeight:700,color:C.text}}, customEx.name),
-                      isCustomized && React.createElement("div", {style:{fontSize:9,fontWeight:800,color:C.orange,background:C.orange+"20",padding:"1px 5px",borderRadius:4}}, "EDITED")
+                return React.createElement(React.Fragment, {key:ei},
+                  React.createElement("div", {style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:"9px 10px",background:C.bg,borderRadius:10,marginBottom:6,borderLeft:"3px solid "+(isCustomized?C.orange:day.tag==="run"?C.green:day.tag==="strength"?C.orange:C.blue)}},
+                    React.createElement("div", {style:{flex:1}},
+                      React.createElement("div", {style:{display:"flex",alignItems:"center",gap:6}},
+                        React.createElement("div", {style:{fontSize:14,fontWeight:700,color:C.text}}, customEx.name),
+                        isCustomized && React.createElement("div", {style:{fontSize:9,fontWeight:800,color:C.orange,background:C.orange+"20",padding:"1px 5px",borderRadius:4}}, "EDITED")
+                      ),
+                      customEx.note && React.createElement("div", {style:{fontSize:11,color:C.textLight,marginTop:2}}, customEx.note)
                     ),
-                    customEx.note && React.createElement("div", {style:{fontSize:11,color:C.textLight,marginTop:2}}, customEx.note)
+                    React.createElement("div", {style:{display:"flex",alignItems:"center",gap:8,marginLeft:8}},
+                      React.createElement("div", {style:{fontSize:14,fontWeight:800,color:C.text,whiteSpace:"nowrap"}}, day.tag==="run"?customEx.sets+" "+customEx.reps:customEx.sets+" × "+customEx.reps),
+                      customEx.timed && customEx.duration && React.createElement("button", {
+                        onClick:(e)=>{e.stopPropagation();setActiveTimer(activeTimer===dayIdx+"-"+si+"-"+ei?null:dayIdx+"-"+si+"-"+ei);},
+                        style:{fontSize:11,fontWeight:700,padding:"2px 8px",borderRadius:6,border:"1px solid "+C.blue+"44",background:C.blue+"15",color:C.blue,cursor:"pointer",fontFamily:"inherit",marginTop:2}
+                      }, activeTimer===dayIdx+"-"+si+"-"+ei?"Hide ⏱":"⏱ Timer"),
+                      React.createElement("button", {
+                        onClick:(e)=>{e.stopPropagation();openEdit(dayIdx,si,ei,customEx);},
+                        style:{background:C.border,border:"none",color:C.textMid,width:28,height:28,borderRadius:8,fontSize:13,cursor:"pointer",fontFamily:"inherit",flexShrink:0}
+                      }, "✏")
+                    )
                   ),
-                  React.createElement("div", {style:{display:"flex",alignItems:"center",gap:8,marginLeft:8}},
-                    React.createElement("div", {style:{fontSize:14,fontWeight:800,color:C.text,whiteSpace:"nowrap"}}, day.tag==="run"?customEx.sets+" "+customEx.reps:customEx.sets+" × "+customEx.reps),
-                    customEx.timed && customEx.duration && React.createElement("button", {
-                      onClick:(e)=>{e.stopPropagation();setActiveTimer(activeTimer===dayIdx+"-"+si+"-"+ei?null:dayIdx+"-"+si+"-"+ei);},
-                      style:{fontSize:11,fontWeight:700,padding:"2px 8px",borderRadius:6,border:"1px solid "+C.blue+"44",background:C.blue+"15",color:C.blue,cursor:"pointer",fontFamily:"inherit",marginTop:2}
-                    }, activeTimer===dayIdx+"-"+si+"-"+ei?"Hide ⏱":"⏱ Timer"),
-                    React.createElement("button", {
-                      onClick:(e)=>{e.stopPropagation();openEdit(dayIdx,si,ei,customEx);},
-                      style:{background:C.border,border:"none",color:C.textMid,width:28,height:28,borderRadius:8,fontSize:13,cursor:"pointer",fontFamily:"inherit",flexShrink:0}
-                    }, "✏")
-                  )
-                ),
-                activeTimer===dayIdx+"-"+si+"-"+ei && customEx.timed && React.createElement(ExerciseTimer, {C, duration:customEx.duration, key:"timer-"+dayIdx+"-"+si+"-"+ei})
-              );
+                  activeTimer===dayIdx+"-"+si+"-"+ei && customEx.timed && React.createElement(ExerciseTimer, {C, duration:customEx.duration, key:"timer-"+dayIdx+"-"+si+"-"+ei})
+                );
             })
           ),
           day.tip && React.createElement("div", {style:{background:C.orange+"12",border:"1px solid "+C.orange+"25",borderRadius:10,padding:"9px 12px",marginTop:10,fontSize:12,color:C.textMid}},
