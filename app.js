@@ -5,127 +5,156 @@ const{useState,useEffect,useRef}=React;const STORAGE_KEY="macro-tracker-data-v2"
     name: "8-Week Fat Loss + Run Plan",
     description: "TRX · Dumbbells · Kettlebells (12, 25, 53 lb) · 5 days/week · 45–60 min",
     totalWeeks: 8,
-
     phases: [
       { weeks: [1,2], name: "Foundation", color: "#4a9eff" },
-      { weeks: [3,4,5,6], name: "Build",       color: "#e8521a" },
-      { weeks: [7,8],     name: "Peak",        color: "#4caf50" },
+      { weeks: [3,4,5,6], name: "Build", color: "#e8521a" },
+      { weeks: [7,8], name: "Peak", color: "#4caf50" },
     ],
-
     weekFocus: {
-      1: "Establish baselines · Easy aerobic running · Full-body strength",
-      2: "Solidify form · Add volume · Build the habit",
-      3: "Raise intensity · Introduce intervals · Increase KB load",
-      4: "Push circuits harder · Mid-distance run build",
+      1: "Establish baselines · Build movement patterns · Easy evening running",
+      2: "Solidify form · Add volume · Increase evening run duration",
+      3: "Raise intensity · Introduce run intervals in circuit · Push evening runs",
+      4: "Heavier loads · Longer evening runs · Build lactate threshold",
       5: "Deload — reduce volume 20%, maintain intensity",
-      6: "Peak circuits · Race-pace intervals · Max run volume",
-      7: "Sharpen speed · Short hard efforts · Maintain strength",
+      6: "Peak circuits · Race-pace evening intervals · Max run volume",
+      7: "Sharpen speed · Hard evening efforts · Maintain strength",
       8: "Peak week · Race-pace confidence · Taper into test day",
     },
-
-    // Base days (week 1). Weeks 2–8 are derived by buildWeekDays().
     baseDays: [
       {
         label: "MON", name: "Strength A — Lower + Pull", tag: "strength", duration: "50 min",
-        warmup: "5 min jump rope or brisk walk",
+        warmup: "5 min: jump rope or brisk walk, leg swings, hip circles",
         sections: [
           { title: "Main Lifts", exercises: [
-            { name: "KB Goblet Squat",       sets: "4", reps: "12",     note: "25 lb KB · 60s rest" },
-            { name: "KB Romanian Deadlift",  sets: "3", reps: "12",     note: "53 lb KB · hip hinge" },
-            { name: "TRX Row",               sets: "4", reps: "12",     note: "Full retraction at top" },
-            { name: "KB Single-Leg Deadlift",sets: "3", reps: "10 ea",  note: "12 lb KB · balance focus" },
-            { name: "TRX Hamstring Curl",    sets: "3", reps: "12",     note: "Hips bridged throughout" },
+            { name: "KB Goblet Squat",         sets: "4", reps: "12",    note: "25 lb KB · 60s rest" },
+            { name: "KB Romanian Deadlift",    sets: "3", reps: "12",    note: "53 lb KB · hip hinge · slow eccentric" },
+            { name: "TRX Row",                 sets: "4", reps: "12",    note: "Full retraction at top" },
+            { name: "KB Single-Leg Deadlift",  sets: "3", reps: "10 ea", note: "12 lb KB · balance focus" },
+            { name: "KB Sumo Squat",           sets: "3", reps: "12",    note: "53 lb KB · wide stance · chest up" },
           ]},
           { title: "Core Finisher", exercises: [
-            { name: "Dead Bug",   sets: "3", reps: "10 ea", note: "Slow and controlled" },
-            { name: "Plank Hold", sets: "3", reps: "40 sec", note: "" },
+            { name: "Dead Bug",   sets: "3", reps: "10 ea", note: "Slow and controlled · lower back flat", timed: false },
+            { name: "Plank Hold", sets: "3", reps: "45 sec", note: "Brace core · neutral spine", timed: true, duration: 45 },
           ]},
         ],
-        tip: "Focus on form this week. If 53 lb KB feels too heavy for RDLs, drop to 25 lb.",
+        tip: "No running today — pure strength. Focus on full range of motion and controlled tempo.",
       },
       {
-        label: "TUE", name: "Easy Zone 2 Run", tag: "run", duration: "40 min",
-        warmup: null,
-        sections: [
-          { title: "Run", exercises: [
-            { name: "Zone 2 Easy Run", sets: "4–5", reps: "miles", note: "Conversational pace — you should be able to talk in full sentences" },
-          ]},
-        ],
-        evening: {
-          name: "Evening Run — Half Marathon Build",
-          sections: [{ title: "Evening Run", exercises: [
-            { name: "Run/Walk Intervals", sets: "20", reps: "min total", note: "Run 3 min · walk 2 min · repeat" },
-          ]}],
-          tip: "Evening runs are optional but powerful. Even 20 min of easy movement accelerates fat loss.",
-        },
-        tip: "Zone 2 = ~60–70% max HR. This is fat-burning aerobic base work. Resist going faster.",
-      },
-      {
-        label: "WED", name: "TRX Metabolic Circuit", tag: "circuit", duration: "45 min",
-        warmup: "5 min dynamic: leg swings, hip circles, arm circles",
-        sections: [
-          { title: "Circuit — 3 Rounds (45 sec on / 15 sec rest)", exercises: [
-            { name: "TRX Squat Jump",          sets: "45s", reps: "×3", note: "Explosive drive through heels" },
-            { name: "TRX Push-Up",             sets: "45s", reps: "×3", note: "Body plank throughout" },
-            { name: "KB Swing",                sets: "45s", reps: "×3", note: "25 lb · hip hinge power, not squat" },
-            { name: "TRX Reverse Lunge",       sets: "45s", reps: "×3", note: "Rear foot in foot cradle" },
-            { name: "KB Goblet Lateral Lunge", sets: "45s", reps: "×3", note: "12 lb · push knee out" },
-          ]},
-          { title: "Abs", exercises: [
-            { name: "TRX Pike",       sets: "3", reps: "10",  note: "Pull hips straight up" },
-            { name: "KB Russian Twist", sets: "3", reps: "20", note: "12 lb · feet off floor" },
-          ]},
-        ],
-        tip: "2 min rest between rounds. Circuit should feel challenging but sustainable.",
-      },
-      {
-        label: "THU", name: "Tempo Run", tag: "run", duration: "40 min",
-        warmup: null,
-        sections: [
-          { title: "Run", exercises: [
-            { name: "Warm-up jog",      sets: "1",  reps: "mile",    note: "Easy pace" },
-            { name: "Tempo Intervals",  sets: "3",  reps: "× 8 min", note: "Comfortably hard · 2 min easy jog between" },
-            { name: "Cool-down jog",    sets: "1",  reps: "mile",    note: "Easy pace" },
-          ]},
-        ],
-        evening: {
-          name: "Evening Run — Easy Recovery",
-          sections: [{ title: "Evening Run", exercises: [
-            { name: "Easy Recovery Run", sets: "15–20", reps: "min", note: "Very easy pace · Zone 1–2 only · shakeout run" },
-          ]}],
-          tip: "Keep this one very easy — flushes lactic acid and builds weekly mileage safely.",
-        },
-        tip: "Tempo = ~80–85% max HR. Short sentences only — you can't hold a full conversation.",
-      },
-      {
-        label: "FRI", name: "Strength B — Upper + Core", tag: "strength", duration: "50 min",
-        warmup: "5 min mobility: shoulder circles, cat-cow, thoracic rotation",
+        label: "TUE", name: "Strength B — Upper + Core", tag: "strength", duration: "50 min",
+        warmup: "5 min: arm circles, band pull-aparts, shoulder rolls",
         sections: [
           { title: "Main Lifts", exercises: [
-            { name: "DB Overhead Press",    sets: "4", reps: "10",    note: "Full extension overhead" },
-            { name: "TRX Chest Press",      sets: "4", reps: "12",    note: "More horizontal = easier" },
-            { name: "KB Single-Arm Row",    sets: "4", reps: "10 ea", note: "53 lb KB · brace core" },
-            { name: "TRX Bicep Curl",       sets: "3", reps: "12",    note: "Keep elbows high" },
-            { name: "TRX Tricep Extension", sets: "3", reps: "12",    note: "Body angle controls difficulty" },
+            { name: "DB Overhead Press",       sets: "4", reps: "10",    note: "Full extension overhead · neutral spine" },
+            { name: "TRX Chest Press",         sets: "4", reps: "12",    note: "Body plank · more horizontal = easier" },
+            { name: "KB Single-Arm Row",       sets: "4", reps: "10 ea", note: "53 lb KB · brace core hard" },
+            { name: "TRX Bicep Curl",          sets: "3", reps: "12",    note: "Keep elbows high · full range" },
+            { name: "TRX Tricep Extension",    sets: "3", reps: "12",    note: "Body angle controls difficulty" },
           ]},
           { title: "Core", exercises: [
-            { name: "TRX Fallout", sets: "3", reps: "10",      note: "Anti-extension core" },
-            { name: "Side Plank",  sets: "3", reps: "30 sec ea", note: "" },
+            { name: "TRX Fallout",   sets: "3", reps: "10",       note: "Anti-extension · hips don't sag" },
+            { name: "Side Plank",    sets: "3", reps: "35 sec ea", note: "Stack feet · drive hip up", timed: true, duration: 35 },
           ]},
         ],
-        tip: "Slow the eccentric (lowering) phase to 3 counts on every rep.",
+        evening: {
+          name: "Evening Run — Zone 2 Build",
+          sections: [{ title: "Evening Run", exercises: [
+            { name: "Easy Zone 2 Run", sets: "45", reps: "min", note: "Conversational pace throughout · ~60–70% max HR" },
+          ]}],
+          tip: "First evening run of the week — keep it easy. You lifted this morning.",
+        },
+        tip: "No running this morning — legs are fresh for tonight's run.",
       },
       {
-        label: "SAT", name: "Active Recovery", tag: "active", duration: "30 min",
-        warmup: null,
+        label: "WED", name: "KB Circuit + Run Intervals", tag: "circuit", duration: "55 min",
+        warmup: "5 min: jumping jacks, hip circles, arm swings",
         sections: [
-          { title: "Pick One", exercises: [
-            { name: "Easy Walk or Bike Ride", sets: "25–30", reps: "min", note: "Very low intensity — just move" },
-            { name: "Yoga / Mobility Flow",   sets: "25–30", reps: "min", note: "Focus on hips, hamstrings, thoracic" },
-            { name: "Foam Roll + Stretch",    sets: "20–30", reps: "min", note: "Quads, IT band, calves, lats" },
+          { title: "Circuit — 3 Rounds", exercises: [
+            { name: "KB Swing",              sets: "45s", reps: "×3", note: "25 lb · explosive hip drive", timed: true, duration: 45 },
+            { name: "400m Run",              sets: "1",   reps: "lap", note: "Moderate-hard pace · recover 90s before next exercise" },
+            { name: "KB Goblet Squat",       sets: "45s", reps: "×3", note: "25 lb · full depth", timed: true, duration: 45 },
+            { name: "TRX Row",               sets: "45s", reps: "×3", note: "Full retraction · body plank", timed: true, duration: 45 },
+            { name: "400m Run",              sets: "1",   reps: "lap", note: "Same pace as first · recover 90s" },
+            { name: "KB Lateral Lunge",      sets: "45s", reps: "×3", note: "25 lb KB · push knee out", timed: true, duration: 45 },
+            { name: "TRX Chest Press",       sets: "45s", reps: "×3", note: "Body plank throughout", timed: true, duration: 45 },
+          ]},
+          { title: "Core Finisher", exercises: [
+            { name: "KB Russian Twist",   sets: "3", reps: "20",     note: "12 lb · feet off floor" },
+            { name: "Mountain Climbers",  sets: "3", reps: "30 sec", note: "Fast feet · hips level", timed: true, duration: 30 },
           ]},
         ],
-        tip: "Non-negotiable. Active recovery accelerates fat loss and prevents overtraining.",
+        tip: "The 400m runs are the key — don't jog them. Push the pace and let the strength work feel harder because of it.",
+      },
+      {
+        label: "THU", name: "Strength A2 — Lower + Pull", tag: "strength", duration: "50 min",
+        warmup: "5 min: leg swings, glute bridges, lateral band walks",
+        sections: [
+          { title: "Main Lifts", exercises: [
+            { name: "KB Front Squat",         sets: "4", reps: "10",    note: "Two 25 lb KBs racked · elbows high" },
+            { name: "KB Deadlift",            sets: "4", reps: "10",    note: "53 lb KB · drive through floor" },
+            { name: "TRX Row",                sets: "4", reps: "12",    note: "Vary grip — wide one set, narrow next" },
+            { name: "KB Hip Thrust",          sets: "3", reps: "15",    note: "53 lb KB on hips · squeeze glutes at top" },
+            { name: "DB Lateral Raise",       sets: "3", reps: "12",    note: "Light DB · slow eccentric" },
+          ]},
+          { title: "Core", exercises: [
+            { name: "Plank to Downdog",  sets: "3", reps: "8",       note: "Slow and deliberate · thoracic extension" },
+            { name: "Hollow Hold",       sets: "3", reps: "30 sec",  note: "Lower back pressed flat · arms overhead", timed: true, duration: 30 },
+          ]},
+        ],
+        evening: {
+          name: "Evening Run — Tempo",
+          sections: [{ title: "Evening Run", exercises: [
+            { name: "Warm-up jog",     sets: "10",  reps: "min",    note: "Easy pace · Zone 2" },
+            { name: "Tempo Run",       sets: "25",  reps: "min",    note: "Comfortably hard · ~80–85% max HR · can speak short sentences" },
+            { name: "Cool-down jog",   sets: "10",  reps: "min",    note: "Easy pace · bring HR down" },
+          ]}],
+          tip: "45 min total. The tempo block builds lactate threshold — the key to running faster.",
+        },
+        tip: "Second strength day — push the load a bit heavier than Monday if form holds.",
+      },
+      {
+        label: "FRI", name: "Full Body Strength + Sprint Finisher", tag: "strength", duration: "60 min",
+        warmup: "5 min: jump rope, dynamic leg swings, arm circles",
+        sections: [
+          { title: "Main Lifts", exercises: [
+            { name: "KB Goblet Squat",         sets: "4", reps: "12",    note: "53 lb KB · heavy day" },
+            { name: "TRX Chest Press",         sets: "4", reps: "12",    note: "Slow eccentric · 3 count down" },
+            { name: "KB Single-Arm Row",       sets: "4", reps: "10 ea", note: "53 lb KB · full ROM" },
+            { name: "DB Arnold Press",         sets: "3", reps: "10",    note: "Rotate through full range" },
+            { name: "KB Romanian Deadlift",    sets: "3", reps: "12",    note: "53 lb · feel the hamstring stretch" },
+          ]},
+          { title: "Sprint Finisher", exercises: [
+            { name: "100m Sprint",   sets: "4", reps: "× 100m", note: "All out effort · 90s full rest between" },
+            { name: "200m Run",      sets: "2", reps: "× 200m", note: "95% effort · 2 min rest between" },
+          ]},
+        ],
+        evening: {
+          name: "Evening Run — Medium Long Run",
+          sections: [{ title: "Evening Run", exercises: [
+            { name: "Easy Warm-up",        sets: "5",   reps: "min",   note: "Walk to easy jog" },
+            { name: "Medium Long Run",     sets: "45",  reps: "min",   note: "Zone 2 pace · steady and controlled" },
+          ]}],
+          tip: "50 min total. You sprinted this morning — keep the evening run easy and aerobic.",
+        },
+        tip: "Sprints at the end when glycogen is low = maximum fat burn. Push them hard.",
+      },
+      {
+        label: "SAT", name: "Long Run", tag: "run", duration: "60–75 min",
+        warmup: null,
+        sections: [
+          { title: "Long Run", exercises: [
+            { name: "Easy Warm-up Walk",   sets: "5",   reps: "min",   note: "Get blood flowing" },
+            { name: "Long Run",            sets: "55",  reps: "min",   note: "Zone 2 · longest run of the week · conversational" },
+            { name: "Cool-down Walk",      sets: "5",   reps: "min",   note: "Bring HR down naturally" },
+          ]},
+        ],
+        evening: {
+          name: "Evening Strides",
+          sections: [{ title: "Optional Strides", exercises: [
+            { name: "Strides", sets: "4–6", reps: "× 80m", note: "Smooth acceleration to 90% · not sprints · keeps legs sharp" },
+          ]}],
+          tip: "Optional. If legs are tired from the long run, skip it. If you feel good, 10 min of strides does wonders.",
+        },
+        tip: "Saturday is your long run day. No strength work. Just easy miles and time on feet.",
       },
       {
         label: "SUN", name: "Full Rest", tag: "rest", duration: "",
@@ -140,133 +169,156 @@ const{useState,useEffect,useRef}=React;const STORAGE_KEY="macro-tracker-data-v2"
     name: "8-Week Fat Loss + Strength + Run (v2)",
     description: "TRX · Dumbbells · Kettlebells · Bosu Ball · Bands · 5 days/week · 45–60 min",
     totalWeeks: 8,
-
     phases: [
       { weeks: [1,2], name: "Foundation", color: "#4a9eff" },
       { weeks: [3,4,5,6], name: "Build", color: "#e8521a" },
       { weeks: [7,8], name: "Peak", color: "#4caf50" },
     ],
-
     weekFocus: {
-      1: "Build base movement patterns · Easy aerobic running · Full-body strength",
-      2: "Solidify form · Introduce bosu stability work · Add run volume",
-      3: "Raise intensity · Band resistance work · Interval running",
-      4: "Push circuits harder · Bosu balance challenges · Mid-distance runs",
+      1: "Build base movement patterns · No foot-cradle TRX · Easy evening running",
+      2: "Solidify form · Introduce bosu stability · Add evening run volume",
+      3: "Raise intensity · Band resistance work · Push evening runs",
+      4: "Heavier loads · Bosu balance challenges · Longer evening runs",
       5: "Deload — reduce volume 20%, maintain intensity",
-      6: "Peak strength circuits · Race-pace intervals · Max run volume",
-      7: "Sharpen speed · Short hard efforts · Maintain strength",
+      6: "Peak circuits · Race-pace evening intervals · Max run volume",
+      7: "Sharpen speed · Hard evening efforts · Maintain strength",
       8: "Peak week · Race-pace confidence · Taper into test day",
     },
-
     baseDays: [
       {
         label: "MON", name: "Strength A — Lower + Pull", tag: "strength", duration: "50 min",
         warmup: "5 min: bosu balance holds, leg swings, hip circles",
         sections: [
           { title: "Main Lifts", exercises: [
-            { name: "KB Goblet Squat",          sets: "4", reps: "12",    note: "25 lb KB · heels on bosu for added challenge" },
-            { name: "KB Romanian Deadlift",     sets: "3", reps: "12",    note: "53 lb KB · slow eccentric" },
-            { name: "TRX Row",                  sets: "4", reps: "12",    note: "Full retraction at top" },
-            { name: "Band Pull-Apart",          sets: "3", reps: "15",    note: "Medium band · arms straight" },
-            { name: "KB Single-Leg Deadlift",   sets: "3", reps: "10 ea", note: "12 lb KB · stand on flat side of bosu" },
+            { name: "KB Goblet Squat on Bosu",   sets: "4", reps: "12",    note: "25 lb KB · heels on flat side of bosu" },
+            { name: "KB Romanian Deadlift",      sets: "3", reps: "12",    note: "53 lb KB · slow eccentric · hip hinge" },
+            { name: "TRX Row",                   sets: "4", reps: "12",    note: "Full retraction · body plank · no foot cradles" },
+            { name: "Band Pull-Apart",           sets: "3", reps: "15",    note: "Medium band · arms straight · squeeze shoulder blades" },
+            { name: "KB Single-Leg Deadlift",    sets: "3", reps: "10 ea", note: "12 lb KB · stand on flat side of bosu" },
           ]},
           { title: "Core Finisher", exercises: [
-            { name: "Bosu Dead Bug",   sets: "3", reps: "10 ea", note: "Lay on dome side · slow and controlled" },
-            { name: "Plank on Bosu",   sets: "3", reps: "40 sec", note: "Hands on flat side of bosu" },
+            { name: "Dead Bug",      sets: "3", reps: "10 ea",  note: "Lower back pressed flat · slow and controlled" },
+            { name: "Plank on Bosu", sets: "3", reps: "40 sec", note: "Hands on flat side · brace hard", timed: true, duration: 40 },
           ]},
         ],
-        tip: "The bosu adds instability — start conservative and build confidence before adding load.",
+        tip: "No running today — pure strength. The bosu adds instability — start conservative.",
       },
       {
-        label: "TUE", name: "Easy Zone 2 Run", tag: "run", duration: "40 min",
-        warmup: null,
-        sections: [
-          { title: "Run", exercises: [
-            { name: "Zone 2 Easy Run", sets: "4–5", reps: "miles", note: "Conversational pace — full sentences throughout" },
-          ]},
-        ],
-        evening: {
-          name: "Evening Run — Half Marathon Build",
-          sections: [{ title: "Evening Run", exercises: [
-            { name: "Run/Walk Intervals", sets: "20", reps: "min total", note: "Run 3 min · walk 2 min · repeat · building toward continuous running" },
-          ]}],
-          tip: "Evening runs are optional but powerful. Even 20 min of easy movement accelerates fat loss.",
-        },
-        tip: "Zone 2 = ~60–70% max HR. This is fat-burning aerobic base work. Keep it easy.",
-      },
-      {
-        label: "WED", name: "Bosu + Band Metabolic Circuit", tag: "circuit", duration: "45 min",
-        warmup: "5 min dynamic: arm circles, lateral band walks, bosu step-overs",
-        sections: [
-          { title: "Circuit — 3 Rounds (45 sec on / 15 sec rest)", exercises: [
-            { name: "Bosu Squat Jump",           sets: "45s", reps: "×3", note: "Jump onto dome side, control landing" },
-            { name: "TRX Push-Up",               sets: "45s", reps: "×3", note: "Body plank throughout" },
-            { name: "KB Swing",                  sets: "45s", reps: "×3", note: "25 lb · hip hinge power" },
-            { name: "Band Lateral Walk",         sets: "45s", reps: "×3", note: "Medium band above knees · stay low" },
-            { name: "Bosu Mountain Climbers",    sets: "45s", reps: "×3", note: "Hands on flat side · fast feet" },
-          ]},
-          { title: "Abs", exercises: [
-            { name: "TRX Pike",          sets: "3", reps: "10",  note: "Pull hips straight up" },
-            { name: "Band Pallof Press", sets: "3", reps: "12 ea", note: "Light band · anti-rotation core" },
-          ]},
-        ],
-        tip: "2 min rest between rounds. The bosu and band combo spikes heart rate fast — pace yourself.",
-      },
-      {
-        label: "THU", name: "Tempo Run", tag: "run", duration: "40 min",
-        warmup: null,
-        sections: [
-          { title: "Run", exercises: [
-            { name: "Warm-up jog",     sets: "1", reps: "mile",    note: "Easy pace" },
-            { name: "Tempo Intervals", sets: "3", reps: "× 8 min", note: "Comfortably hard · 2 min easy jog between" },
-            { name: "Cool-down jog",   sets: "1", reps: "mile",    note: "Easy pace" },
-          ]},
-        ],
-        evening: {
-          name: "Evening Run — Easy Recovery",
-          sections: [{ title: "Evening Run", exercises: [
-            { name: "Easy Recovery Run", sets: "15–20", reps: "min", note: "Very easy pace · Zone 1–2 only · shakeout run" },
-          ]}],
-          tip: "Keep this one very easy — it flushes lactic acid from the morning session and builds weekly mileage safely.",
-        },
-        evening: {
-          name: "Evening Run — Easy Recovery",
-          sections: [{ title: "Evening Run", exercises: [
-            { name: "Easy Recovery Run", sets: "15–20", reps: "min", note: "Very easy pace · Zone 1–2 only · shakeout run" },
-          ]}],
-          tip: "Keep this one very easy — flushes lactic acid and builds weekly mileage safely.",
-        },
-        tip: "Tempo = ~80–85% max HR. Short sentences only — you can't hold a full conversation.",
-      },
-      {
-        label: "FRI", name: "Strength B — Upper + Core", tag: "strength", duration: "50 min",
+        label: "TUE", name: "Strength B — Upper + Core", tag: "strength", duration: "50 min",
         warmup: "5 min: band shoulder circles, TRX scap retractions, bosu balance",
         sections: [
           { title: "Main Lifts", exercises: [
-            { name: "DB Overhead Press on Bosu", sets: "4", reps: "10",    note: "Stand on flat side · light DB to start" },
-            { name: "TRX Chest Press",           sets: "4", reps: "12",    note: "More horizontal = easier" },
+            { name: "DB Overhead Press on Bosu", sets: "4", reps: "10",    note: "Stand on flat side · reduces load significantly" },
+            { name: "TRX Chest Press",           sets: "4", reps: "12",    note: "Body plank · no foot cradles needed" },
             { name: "KB Single-Arm Row",         sets: "4", reps: "10 ea", note: "53 lb KB · brace core hard" },
-            { name: "Band Face Pull",            sets: "3", reps: "15",    note: "Medium band · external rotation" },
-            { name: "TRX Tricep Extension",      sets: "3", reps: "12",    note: "Body angle controls difficulty" },
+            { name: "Band Face Pull",            sets: "3", reps: "15",    note: "Medium band · external rotation · elbows high" },
+            { name: "TRX Tricep Extension",      sets: "3", reps: "12",    note: "Body angle controls difficulty · no foot cradles" },
           ]},
           { title: "Core", exercises: [
-            { name: "Bosu Side Plank",    sets: "3", reps: "30 sec ea", note: "Hip on dome side" },
-            { name: "Band Woodchop",      sets: "3", reps: "12 ea",    note: "Light band · rotate from core" },
+            { name: "TRX Fallout",    sets: "3", reps: "10",       note: "Anti-extension · hips don't sag · no foot cradles" },
+            { name: "Bosu Side Plank", sets: "3", reps: "30 sec ea", note: "Hip on dome side · drive hip up", timed: true, duration: 30 },
           ]},
         ],
-        tip: "The bosu overhead press is humbling — reduce weight significantly from floor pressing.",
+        evening: {
+          name: "Evening Run — Zone 2 Build",
+          sections: [{ title: "Evening Run", exercises: [
+            { name: "Easy Zone 2 Run", sets: "45", reps: "min", note: "Conversational pace · ~60–70% max HR · you lifted this morning" },
+          ]}],
+          tip: "First evening run of the week — keep it easy. You lifted this morning.",
+        },
+        tip: "No running this morning — legs are fresh for tonight.",
       },
       {
-        label: "SAT", name: "Active Recovery", tag: "active", duration: "30 min",
-        warmup: null,
+        label: "WED", name: "Bosu + KB Circuit + Run Intervals", tag: "circuit", duration: "55 min",
+        warmup: "5 min: lateral band walks, arm circles, bosu step-overs",
         sections: [
-          { title: "Pick One", exercises: [
-            { name: "Easy Walk or Bike Ride",  sets: "25–30", reps: "min", note: "Very low intensity — just move" },
-            { name: "Yoga / Mobility Flow",    sets: "25–30", reps: "min", note: "Focus on hips, hamstrings, thoracic" },
-            { name: "Band Mobility Routine",   sets: "20–30", reps: "min", note: "Hip flexors, chest, shoulders, lats" },
+          { title: "Circuit — 3 Rounds", exercises: [
+            { name: "KB Swing",              sets: "45s", reps: "×3", note: "25 lb · explosive hip drive", timed: true, duration: 45 },
+            { name: "400m Run",              sets: "1",   reps: "lap", note: "Moderate-hard pace · recover 90s before next exercise" },
+            { name: "Bosu Squat Jump",       sets: "45s", reps: "×3", note: "Jump onto dome side · stick the landing", timed: true, duration: 45 },
+            { name: "TRX Row",               sets: "45s", reps: "×3", note: "Full retraction · no foot cradles", timed: true, duration: 45 },
+            { name: "400m Run",              sets: "1",   reps: "lap", note: "Same pace as first · recover 90s" },
+            { name: "Band Lateral Walk",     sets: "45s", reps: "×3", note: "Medium band above knees · stay low", timed: true, duration: 45 },
+            { name: "TRX Chest Press",       sets: "45s", reps: "×3", note: "Body plank · no foot cradles", timed: true, duration: 45 },
+          ]},
+          { title: "Core Finisher", exercises: [
+            { name: "Band Pallof Press",   sets: "3", reps: "12 ea", note: "Light band · anti-rotation · brace hard" },
+            { name: "Mountain Climbers",   sets: "3", reps: "30 sec", note: "Fast feet · hips level", timed: true, duration: 30 },
           ]},
         ],
-        tip: "Non-negotiable. Active recovery accelerates fat loss and prevents overtraining.",
+        tip: "The 400m runs are the key — push the pace. Let the strength work feel harder because of it.",
+      },
+      {
+        label: "THU", name: "Strength A2 — Lower + Pull", tag: "strength", duration: "50 min",
+        warmup: "5 min: glute bridges, leg swings, lateral band walks",
+        sections: [
+          { title: "Main Lifts", exercises: [
+            { name: "KB Front Squat",         sets: "4", reps: "10",    note: "Two 25 lb KBs racked · elbows high" },
+            { name: "KB Deadlift",            sets: "4", reps: "10",    note: "53 lb KB · drive through floor" },
+            { name: "TRX Row",                sets: "4", reps: "12",    note: "Vary grip each set · no foot cradles" },
+            { name: "KB Hip Thrust",          sets: "3", reps: "15",    note: "53 lb KB on hips · squeeze glutes hard" },
+            { name: "Band Woodchop",          sets: "3", reps: "12 ea", note: "Light band · rotate from core · tall posture" },
+          ]},
+          { title: "Core", exercises: [
+            { name: "Hollow Hold",      sets: "3", reps: "30 sec", note: "Lower back pressed flat · arms overhead", timed: true, duration: 30 },
+            { name: "Bosu Dead Bug",    sets: "3", reps: "10 ea",  note: "Lay on dome side · slow and controlled" },
+          ]},
+        ],
+        evening: {
+          name: "Evening Run — Tempo",
+          sections: [{ title: "Evening Run", exercises: [
+            { name: "Warm-up jog",   sets: "10", reps: "min", note: "Easy pace · Zone 2" },
+            { name: "Tempo Run",     sets: "25", reps: "min", note: "Comfortably hard · ~80–85% max HR" },
+            { name: "Cool-down jog", sets: "10", reps: "min", note: "Easy pace · bring HR down" },
+          ]}],
+          tip: "45 min total. The tempo block builds lactate threshold — key to running faster longer.",
+        },
+        tip: "Push the load a bit heavier than Monday if form holds.",
+      },
+      {
+        label: "FRI", name: "Full Body Strength + Sprint Finisher", tag: "strength", duration: "60 min",
+        warmup: "5 min: jump rope, dynamic leg swings, arm circles",
+        sections: [
+          { title: "Main Lifts", exercises: [
+            { name: "KB Goblet Squat on Bosu",  sets: "4", reps: "12",    note: "53 lb KB · heavy day · full depth" },
+            { name: "TRX Chest Press",          sets: "4", reps: "12",    note: "Slow eccentric · 3 count down · no foot cradles" },
+            { name: "KB Single-Arm Row",        sets: "4", reps: "10 ea", note: "53 lb KB · full ROM" },
+            { name: "DB Arnold Press",          sets: "3", reps: "10",    note: "Rotate through full range" },
+            { name: "KB Romanian Deadlift",     sets: "3", reps: "12",    note: "53 lb · feel the hamstring stretch" },
+          ]},
+          { title: "Sprint Finisher", exercises: [
+            { name: "100m Sprint", sets: "4", reps: "× 100m", note: "All out effort · 90s full rest between" },
+            { name: "200m Run",    sets: "2", reps: "× 200m", note: "95% effort · 2 min rest between" },
+          ]},
+        ],
+        evening: {
+          name: "Evening Run — Medium Long Run",
+          sections: [{ title: "Evening Run", exercises: [
+            { name: "Easy Warm-up",    sets: "5",  reps: "min", note: "Walk to easy jog" },
+            { name: "Medium Long Run", sets: "45", reps: "min", note: "Zone 2 pace · steady and controlled" },
+          ]}],
+          tip: "50 min total. You sprinted this morning — keep the evening run easy and aerobic.",
+        },
+        tip: "Sprints at the end when glycogen is low = maximum fat burn. Push them hard.",
+      },
+      {
+        label: "SAT", name: "Long Run", tag: "run", duration: "60–75 min",
+        warmup: null,
+        sections: [
+          { title: "Long Run", exercises: [
+            { name: "Easy Warm-up Walk", sets: "5",  reps: "min", note: "Get blood flowing" },
+            { name: "Long Run",          sets: "55", reps: "min", note: "Zone 2 · longest run of the week · conversational" },
+            { name: "Cool-down Walk",    sets: "5",  reps: "min", note: "Bring HR down naturally" },
+          ]},
+        ],
+        evening: {
+          name: "Evening Strides",
+          sections: [{ title: "Optional Strides", exercises: [
+            { name: "Strides", sets: "4–6", reps: "× 80m", note: "Smooth acceleration to 90% · not sprints · keeps legs sharp" },
+          ]}],
+          tip: "Optional. If legs are tired skip it. If you feel good, 10 min of strides does wonders.",
+        },
+        tip: "Saturday is your long run day. No strength work. Just easy miles and time on feet.",
       },
       {
         label: "SUN", name: "Full Rest", tag: "rest", duration: "",
@@ -283,69 +335,73 @@ function buildWeekDays(planId, weekNum) {
   if (!plan) return [];
   const base = JSON.parse(JSON.stringify(plan.baseDays));
 
+  // ── Deload week 5 ─────────────────────────────────────────
   if (weekNum === 5) {
-    base[0].sections[0].exercises.forEach(ex => { ex.sets = ex.sets === "4" ? "3" : "2"; });
-    base[0].tip = "Deload week. Drop one set per exercise, keep the weight and intensity.";
-    base[1].sections[0].exercises[0].sets = "3–4";
-    base[1].tip = "Deload — shorter and easier. Let the body absorb 4 weeks of training.";
-  }
-  if (weekNum >= 3 && weekNum !== 5) {
-    base[1].sections[0].exercises[0].sets = weekNum <= 4 ? "5–6" : "6–7";
-    base[3].sections[0].exercises[1].reps = weekNum <= 4 ? "× 8 min" : "× 10 min";
-    if (planId === "8wk-fat-loss-run") {
-      base[0].sections[0].exercises[0].note = "53 lb KB · full depth";
-    }
-    if (planId === "8wk-fat-loss-run-v2") {
-      base[0].sections[0].exercises[0].note = "53 lb KB · heels on bosu";
-      base[2].sections[0].exercises[1].note = "Heavy band above knees · stay low";
-    }
-  }
-  if (weekNum >= 6) {
-    base[3].name = "Mile Repeats";
-    base[3].sections[0].exercises[1] = { name: "Mile Repeats", sets: "5", reps: "× 1 mile", note: "Race pace · 2 min jog recovery" };
-    base[3].tip = "Mile repeats build lactate threshold. Hit the same pace every rep.";
-    base[1].sections[0].exercises[0].sets = "6–8";
-    if (planId === "8wk-fat-loss-run-v2") {
-      base[2].sections[0].exercises[0].note = "Jump onto bosu, stick the landing — explosive";
-    }
-  }
-  if (weekNum === 7) {
-    base[3].name = "Speed Intervals";
-    base[3].sections[0].exercises[1] = { name: "Speed Intervals", sets: "6", reps: "× 800m", note: "Hard effort · 90 sec rest between" };
-  }
-  if (weekNum === 8) {
-    base[3].name = "Race Pace Tune-up";
-    base[3].sections[0].exercises[1] = { name: "Race Pace Run", sets: "3", reps: "× 1 mile", note: "Race pace · controlled and confident" };
-    base[1].sections[0].exercises[0] = { name: "Zone 2 Easy Run", sets: "5", reps: "miles", note: "Taper — keep it easy and fresh" };
-    base[1].tip = "Taper week — resist the urge to push hard. Save it for race day.";
+    [0,1,3,4].forEach(di => {
+      base[di].sections[0].exercises.forEach(ex => { ex.sets = ex.sets === "4" ? "3" : "2"; });
+    });
+    base[0].tip = "Deload week. Drop one set per exercise, keep weight and intensity.";
   }
 
-  // Progressive evening run overload
+  // ── Progressive KB load (weeks 3+) ───────────────────────
+  if (weekNum >= 3 && weekNum !== 5) {
+    // Heavier goblet squat
+    base[0].sections[0].exercises[0].note = "53 lb KB · full depth · control the descent";
+    // More circuit rounds
+    base[2].sections[0].exercises.forEach(ex => {
+      if (ex.reps === "×3") ex.reps = weekNum >= 6 ? "×4" : "×3";
+    });
+  }
+
+  // ── Evening run progressions ──────────────────────────────
+  // TUE evening — Zone 2 build
   if (base[1].evening) {
     const ev = base[1].evening.sections[0].exercises[0];
-    if (weekNum <= 2) {
-      ev.sets = "20"; ev.reps = "min"; ev.note = "Run 3 min · walk 2 min · repeat";
-    } else if (weekNum <= 4) {
-      ev.sets = "25"; ev.reps = "min"; ev.note = "Run 5 min · walk 1 min · repeat";
-    } else if (weekNum === 5) {
-      ev.sets = "20"; ev.reps = "min"; ev.note = "Deload — easy run/walk, no pressure";
-    } else if (weekNum <= 6) {
-      ev.sets = "30"; ev.reps = "min continuous", ev.note = "Continuous easy run · Zone 2 only";
-    } else {
-      ev.sets = "35"; ev.reps = "min continuous"; ev.note = "Steady continuous run · building toward 5K";
-    }
+    if (weekNum <= 2)      { ev.sets = "45"; ev.note = "Easy Zone 2 · conversational · build the base"; }
+    else if (weekNum <= 4) { ev.sets = "50"; ev.note = "Zone 2 · push to 50 min · still conversational"; }
+    else if (weekNum === 5){ ev.sets = "35"; ev.note = "Deload — shorter easy run · don't push it"; }
+    else if (weekNum <= 6) { ev.sets = "55"; ev.note = "Zone 2 · 55 min continuous · strong aerobic base"; }
+    else                   { ev.sets = "60"; ev.note = "Zone 2 · 60 min · longest Tuesday yet · you've got this"; }
   }
+
+  // THU evening — Tempo progression
   if (base[3].evening) {
-    const ev = base[3].evening.sections[0].exercises[0];
-    if (weekNum <= 2) {
-      ev.sets = "15"; ev.reps = "min"; ev.note = "Very easy walk/jog — Zone 1 only";
-    } else if (weekNum <= 4) {
-      ev.sets = "20"; ev.reps = "min"; ev.note = "Easy jog · Zone 2 · no effort";
-    } else if (weekNum === 5) {
-      ev.sets = "15"; ev.reps = "min"; ev.note = "Deload — short easy shakeout only";
-    } else {
-      ev.sets = "20–25"; ev.reps = "min"; ev.note = "Easy recovery run · stay conversational";
-    }
+    const runs = base[3].evening.sections[0].exercises;
+    if (weekNum <= 2)      { runs[1].sets = "20"; runs[1].note = "Tempo · comfortably hard · 80–85% max HR"; }
+    else if (weekNum <= 4) { runs[1].sets = "25"; runs[1].note = "Tempo · push the pace · 80–85% max HR"; }
+    else if (weekNum === 5){ runs[1].sets = "15"; runs[1].note = "Deload — easy jog only · no tempo effort"; }
+    else if (weekNum <= 6) { runs[1].sets = "30"; runs[1].note = "Tempo · 30 min strong · 80–85% max HR"; }
+    else                   { runs[1].sets = "30"; runs[1].note = "Race pace · controlled and confident · peak fitness"; }
+  }
+
+  // FRI evening — Medium long run progression
+  if (base[4].evening) {
+    const ev = base[4].evening.sections[0].exercises[1];
+    if (weekNum <= 2)      { ev.sets = "40"; ev.note = "Zone 2 · easy after sprint work this morning"; }
+    else if (weekNum <= 4) { ev.sets = "45"; ev.note = "Zone 2 · 45 min steady · building long run endurance"; }
+    else if (weekNum === 5){ ev.sets = "30"; ev.note = "Deload — short easy run only"; }
+    else if (weekNum <= 6) { ev.sets = "50"; ev.note = "Zone 2 · 50 min · strong medium long run"; }
+    else                   { ev.sets = "55"; ev.note = "Zone 2 · 55 min · peak medium long run"; }
+  }
+
+  // SAT evening — Strides (optional, no progression needed)
+
+  // SAT long run progression
+  if (base[5].sections[0]) {
+    const lr = base[5].sections[0].exercises[1];
+    if (weekNum <= 2)      { lr.sets = "50"; lr.note = "Zone 2 · steady · longest run of the week"; }
+    else if (weekNum <= 4) { lr.sets = "60"; lr.note = "Zone 2 · 60 min · building long run base"; }
+    else if (weekNum === 5){ lr.sets = "40"; lr.note = "Deload — shorter long run · keep it very easy"; }
+    else if (weekNum <= 6) { lr.sets = "70"; lr.note = "Zone 2 · 70 min · half marathon prep"; }
+    else if (weekNum === 7){ lr.sets = "75"; lr.note = "Zone 2 · 75 min · peak long run · you're ready"; }
+    else                   { lr.sets = "50"; lr.note = "Taper long run · easy and fresh · race week coming"; }
+  }
+
+  // ── Week 8 taper ─────────────────────────────────────────
+  if (weekNum === 8) {
+    base[0].tip = "Taper week — reduce effort. Stay sharp but don't crush yourself.";
+    base[4].sections[1].exercises[0].sets = "3";
+    base[4].sections[1].exercises[0].note = "Taper sprints — 3 only · stay sharp not tired";
   }
 
   return base;
@@ -354,7 +410,66 @@ function buildWeekDays(planId, weekNum) {
 
 // ============================================================
 
-const todayKey=()=>{const d=new Date();const y=d.getFullYear();const m=String(d.getMonth()+1).padStart(2,"0");const day=String(d.getDate()).padStart(2,"0");return`${y}-${m}-${day}`;};const dateKey=d=>{const y=d.getFullYear();const m=String(d.getMonth()+1).padStart(2,"0");const day=String(d.getDate()).padStart(2,"0");return`${y}-${m}-${day}`;};const emptyGoals={calories:2000,protein:150,carbs:200,fat:65};const LIGHT={blue:"#2e6b3a",blueDark:"#1f4a28",blueLight:"#e8f3e8",green:"#2e6b3a",greenLight:"#e8f3e8",orange:"#c9883a",orangeLight:"#f5ede0",red:"#b84040",redLight:"#f5e8e8",purple:"#5a6ab0",purpleLight:"#eaecf8",bg:"#f4f7f2",card:"#ffffff",border:"#ddeadd",text:"#1a2e1e",textMid:"#4a6a50",textLight:"#7a9a7e"};const DARK={blue:"#4aac5c",blueDark:"#2e7a40",blueLight:"#1a3020",green:"#4aac5c",greenLight:"#1a3020",orange:"#d4944a",orangeLight:"#2a1e0a",red:"#d45555",redLight:"#2a1010",purple:"#7a8acc",purpleLight:"#1a1e30",bg:"#0f1a12",card:"#1a2e1e",border:"#2a4030",text:"#e8f3e8",textMid:"#9abaa0",textLight:"#5a7a60"};const inputStyle={width:"100%",background:"#f0f5f0",border:"1.5px solid #ddeadd",borderRadius:12,padding:"13px 16px",color:"#1a2e1e",fontSize:17,outline:"none",boxSizing:"border-box",fontFamily:"inherit",transition:"border-color 0.2s"};function MacroCircle({value,goal,color,label,unit="",textColor,C}){const pct=Math.min(value/goal*100,100);const over=value>goal;const r=26,circ=2*Math.PI*r;const tc=textColor||(C?C.text:"#1a2e1e");const tcLight=textColor?"rgba(255,255,255,0.7)":C?C.textLight:"#7a9a7e";const tcMid=textColor?"rgba(255,255,255,0.9)":C?C.textMid:"#4a6a50";const trackColor=textColor?"rgba(255,255,255,0.2)":C?C.border:"#ddeadd";const red=C?C.red:"#b84040";return React.createElement("div",{style:{display:"flex",flexDirection:"column",alignItems:"center",gap:4}},React.createElement("div",{style:{position:"relative",width:64,height:64}},React.createElement("svg",{width:64,height:64,viewBox:"0 0 64 64"},React.createElement("circle",{cx:32,cy:32,r:r,fill:"none",stroke:trackColor,strokeWidth:5}),React.createElement("circle",{cx:32,cy:32,r:r,fill:"none",stroke:over?red:color,strokeWidth:5,strokeDasharray:`${pct/100*circ} ${circ}`,strokeDashoffset:circ*0.25,strokeLinecap:"round",style:{transition:"stroke-dasharray 0.5s ease"}})),React.createElement("div",{style:{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}},React.createElement("div",{style:{fontSize:15,fontWeight:900,color:over?"#ffcdd2":tc,lineHeight:1}},Math.round(value)),React.createElement("div",{style:{fontSize:12,color:tcLight,fontWeight:600}},unit||"g"))),React.createElement("div",{style:{fontSize:12,fontWeight:800,color:tcMid,textTransform:"uppercase",letterSpacing:0.5}},label),React.createElement("div",{style:{fontSize:13,color:tcLight}},goal,unit||"g"));}function PlanEditModal({ C, editingEx, editForm, setEditForm, onSave, onReset, onClose, isCustomized }) {
+const todayKey=()=>{const d=new Date();const y=d.getFullYear();const m=String(d.getMonth()+1).padStart(2,"0");const day=String(d.getDate()).padStart(2,"0");return`${y}-${m}-${day}`;};const dateKey=d=>{const y=d.getFullYear();const m=String(d.getMonth()+1).padStart(2,"0");const day=String(d.getDate()).padStart(2,"0");return`${y}-${m}-${day}`;};const emptyGoals={calories:2000,protein:150,carbs:200,fat:65};const LIGHT={blue:"#2e6b3a",blueDark:"#1f4a28",blueLight:"#e8f3e8",green:"#2e6b3a",greenLight:"#e8f3e8",orange:"#c9883a",orangeLight:"#f5ede0",red:"#b84040",redLight:"#f5e8e8",purple:"#5a6ab0",purpleLight:"#eaecf8",bg:"#f4f7f2",card:"#ffffff",border:"#ddeadd",text:"#1a2e1e",textMid:"#4a6a50",textLight:"#7a9a7e"};const DARK={blue:"#4aac5c",blueDark:"#2e7a40",blueLight:"#1a3020",green:"#4aac5c",greenLight:"#1a3020",orange:"#d4944a",orangeLight:"#2a1e0a",red:"#d45555",redLight:"#2a1010",purple:"#7a8acc",purpleLight:"#1a1e30",bg:"#0f1a12",card:"#1a2e1e",border:"#2a4030",text:"#e8f3e8",textMid:"#9abaa0",textLight:"#5a7a60"};const inputStyle={width:"100%",background:"#f0f5f0",border:"1.5px solid #ddeadd",borderRadius:12,padding:"13px 16px",color:"#1a2e1e",fontSize:17,outline:"none",boxSizing:"border-box",fontFamily:"inherit",transition:"border-color 0.2s"};function MacroCircle({value,goal,color,label,unit="",textColor,C}){const pct=Math.min(value/goal*100,100);const over=value>goal;const r=26,circ=2*Math.PI*r;const tc=textColor||(C?C.text:"#1a2e1e");const tcLight=textColor?"rgba(255,255,255,0.7)":C?C.textLight:"#7a9a7e";const tcMid=textColor?"rgba(255,255,255,0.9)":C?C.textMid:"#4a6a50";const trackColor=textColor?"rgba(255,255,255,0.2)":C?C.border:"#ddeadd";const red=C?C.red:"#b84040";return React.createElement("div",{style:{display:"flex",flexDirection:"column",alignItems:"center",gap:4}},React.createElement("div",{style:{position:"relative",width:64,height:64}},React.createElement("svg",{width:64,height:64,viewBox:"0 0 64 64"},React.createElement("circle",{cx:32,cy:32,r:r,fill:"none",stroke:trackColor,strokeWidth:5}),React.createElement("circle",{cx:32,cy:32,r:r,fill:"none",stroke:over?red:color,strokeWidth:5,strokeDasharray:`${pct/100*circ} ${circ}`,strokeDashoffset:circ*0.25,strokeLinecap:"round",style:{transition:"stroke-dasharray 0.5s ease"}})),React.createElement("div",{style:{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}},React.createElement("div",{style:{fontSize:15,fontWeight:900,color:over?"#ffcdd2":tc,lineHeight:1}},Math.round(value)),React.createElement("div",{style:{fontSize:12,color:tcLight,fontWeight:600}},unit||"g"))),React.createElement("div",{style:{fontSize:12,fontWeight:800,color:tcMid,textTransform:"uppercase",letterSpacing:0.5}},label),React.createElement("div",{style:{fontSize:13,color:tcLight}},goal,unit||"g"));}function ExerciseTimer({ C, duration, onDone }) {
+  const [timeLeft, setTimeLeft] = React.useState(duration);
+  const [running, setRunning] = React.useState(false);
+  const [finished, setFinished] = React.useState(false);
+  const intervalRef = React.useRef(null);
+
+  React.useEffect(() => {
+    setTimeLeft(duration);
+    setRunning(false);
+    setFinished(false);
+  }, [duration]);
+
+  React.useEffect(() => {
+    if (running) {
+      intervalRef.current = setInterval(() => {
+        setTimeLeft(t => {
+          if (t <= 1) {
+            clearInterval(intervalRef.current);
+            setRunning(false);
+            setFinished(true);
+            if (onDone) onDone();
+            return 0;
+          }
+          return t - 1;
+        });
+      }, 1000);
+    } else {
+      clearInterval(intervalRef.current);
+    }
+    return () => clearInterval(intervalRef.current);
+  }, [running]);
+
+  const pct = Math.round((timeLeft / duration) * 100);
+  const mins = Math.floor(timeLeft / 60);
+  const secs = String(timeLeft % 60).padStart(2, "0");
+  const color = finished ? C.green : timeLeft <= 5 ? "#e8521a" : C.blue;
+
+  return React.createElement("div", { style: { marginTop: 10, background: C.bg, borderRadius: 12, padding: "12px 14px", border: "1.5px solid " + color + "44" } },
+    React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 } },
+      React.createElement("div", { style: { fontSize: 28, fontWeight: 900, color, fontFamily: "monospace", letterSpacing: 1 } },
+        finished ? "✓ Done!" : mins > 0 ? mins + ":" + secs : secs + "s"
+      ),
+      React.createElement("div", { style: { display: "flex", gap: 8 } },
+        !finished && React.createElement("button", {
+          onClick: () => setRunning(r => !r),
+          style: { padding: "8px 16px", borderRadius: 10, border: "none", background: running ? "#e8521a" : color, color: "#fff", fontWeight: 800, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }
+        }, running ? "Pause" : timeLeft === duration ? "Start" : "Resume"),
+        React.createElement("button", {
+          onClick: () => { setTimeLeft(duration); setRunning(false); setFinished(false); },
+          style: { padding: "8px 12px", borderRadius: 10, border: "1.5px solid " + C.border, background: C.card, color: C.textMid, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }
+        }, "↺")
+      )
+    ),
+    React.createElement("div", { style: { height: 6, background: C.border, borderRadius: 99, overflow: "hidden" } },
+      React.createElement("div", { style: { height: "100%", width: pct + "%", background: color, borderRadius: 99, transition: "width 1s linear" } })
+    )
+  );
+}
+
+function PlanEditModal({ C, editingEx, editForm, setEditForm, onSave, onReset, onClose, isCustomized }) {
   if (!editingEx) return null;
   return React.createElement("div", {
     style: { position:"fixed", top:0, left:0, right:0, bottom:0, background:"rgba(0,0,0,0.6)", zIndex:1000, display:"flex", alignItems:"flex-end", justifyContent:"center" },
@@ -408,6 +523,7 @@ function WorkoutPlanTab({ C, showToast, haptic, saveWorkout, workoutDate }) {
   const [assignPlanId,   setAssignPlanId]   = React.useState("8wk-fat-loss-run");
   const [customExercises, setCustomExercises] = React.useState({});
   const [editingEx,      setEditingEx]      = React.useState(null); // {dayIdx, si, ei, weekNum}
+  const [activeTimer,    setActiveTimer]    = React.useState(null);
   const [editForm,       setEditForm]       = React.useState({});
 
   const ADMIN_UID = "Zb0aByrvCMSlff0JjCU2Lz6nz1P2";
@@ -689,7 +805,8 @@ function WorkoutPlanTab({ C, showToast, haptic, saveWorkout, workoutDate }) {
               const done=!!completedSets[k];
               return React.createElement("button", {key:i,onClick:()=>toggleSet(k),style:{width:56,height:56,borderRadius:14,cursor:"pointer",fontFamily:"inherit",fontWeight:900,fontSize:18,transition:"all 0.15s",background:done?C.green:C.bg,color:done?"#fff":C.textMid,border:done?"none":"2px solid "+C.border}}, done?"✓":(i+1));
             })
-          )
+          ),
+          current.timed && current.duration && React.createElement(ExerciseTimer, {C, duration:current.duration, key:guidedDay+"-"+guidedStep})
         ),
         isRun && React.createElement("button", {onClick:()=>toggleSet(guidedDay+"-"+current.si+"-"+current.ei+"-0"),style:{width:"100%",padding:16,borderRadius:14,cursor:"pointer",fontFamily:"inherit",fontWeight:900,fontSize:18,transition:"all 0.15s",background:completedSets[guidedDay+"-"+current.si+"-"+current.ei+"-0"]?C.green:C.bg,color:completedSets[guidedDay+"-"+current.si+"-"+current.ei+"-0"]?"#fff":C.textMid,border:"2px solid "+(completedSets[guidedDay+"-"+current.si+"-"+current.ei+"-0"]?C.green:C.border)}}, completedSets[guidedDay+"-"+current.si+"-"+current.ei+"-0"]?"✓ Done":"Tap when complete")
       ),
@@ -780,14 +897,19 @@ function WorkoutPlanTab({ C, showToast, haptic, saveWorkout, workoutDate }) {
                   ),
                   React.createElement("div", {style:{display:"flex",alignItems:"center",gap:8,marginLeft:8}},
                     React.createElement("div", {style:{fontSize:14,fontWeight:800,color:C.text,whiteSpace:"nowrap"}}, day.tag==="run"?customEx.sets+" "+customEx.reps:customEx.sets+" × "+customEx.reps),
+                    customEx.timed && customEx.duration && React.createElement("button", {
+                      onClick:(e)=>{e.stopPropagation();setActiveTimer(activeTimer===dayIdx+"-"+si+"-"+ei?null:dayIdx+"-"+si+"-"+ei);},
+                      style:{fontSize:11,fontWeight:700,padding:"2px 8px",borderRadius:6,border:"1px solid "+C.blue+"44",background:C.blue+"15",color:C.blue,cursor:"pointer",fontFamily:"inherit",marginTop:2}
+                    }, activeTimer===dayIdx+"-"+si+"-"+ei?"Hide ⏱":"⏱ Timer"),
                     React.createElement("button", {
                       onClick:(e)=>{e.stopPropagation();openEdit(dayIdx,si,ei,customEx);},
                       style:{background:C.border,border:"none",color:C.textMid,width:28,height:28,borderRadius:8,fontSize:13,cursor:"pointer",fontFamily:"inherit",flexShrink:0}
                     }, "✏")
                   )
-                );
-              })
-            )
+                ),
+                activeTimer===dayIdx+"-"+si+"-"+ei && customEx.timed && React.createElement(ExerciseTimer, {C, duration:customEx.duration, key:"timer-"+dayIdx+"-"+si+"-"+ei})
+              );
+            })
           ),
           day.tip && React.createElement("div", {style:{background:C.orange+"12",border:"1px solid "+C.orange+"25",borderRadius:10,padding:"9px 12px",marginTop:10,fontSize:12,color:C.textMid}},
             React.createElement("span", {style:{color:C.orange,fontWeight:800}}, "💡 "), day.tip
