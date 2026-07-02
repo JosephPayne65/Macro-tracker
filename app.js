@@ -1021,8 +1021,7 @@ function WorkoutPlanTab({ C, userId, userName, googleUser, showToast, haptic }) 
                       style: { fontSize:11, fontWeight:700, padding:"2px 8px", borderRadius:6, border:"1px solid "+C.blue+"44", background:C.blue+"15", color:C.blue, cursor:"pointer", fontFamily:"inherit" }
                     }, activeTimer === `${dayIdx}-${si}-${ei}` ? "Hide ⏱" : "⏱ Timer")
                   )
-                ),
-                activeTimer === `${dayIdx}-${si}-${ei}` && ex.timed && React.createElement(ExerciseTimer, { C, duration: ex.duration, key: `t-${dayIdx}-${si}-${ei}` })
+                )
               )
             )
           ),
