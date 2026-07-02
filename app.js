@@ -863,7 +863,8 @@ function WorkoutPlanTab({ C, userId, userName, googleUser, showToast, haptic }) 
                 }
               }, done ? "✓" : `${i + 1}`);
             })
-          )
+          ),
+          current.timed && current.duration && React.createElement(ExerciseTimer, { C, duration: current.duration, key: `guided-${guidedStep}` })
         ),
 
         isRun && React.createElement("button", {
@@ -989,7 +990,6 @@ function WorkoutPlanTab({ C, userId, userName, googleUser, showToast, haptic }) 
             ),
             React.createElement("div", { style: { fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 99, background: tag.bg, color: tag.color } }, tag.label)
           ),
-          current.timed && current.duration && React.createElement(ExerciseTimer, { C, duration: current.duration, key: `guided-${guidedStep}` }),
           React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } },
             done && React.createElement("div", { style: { fontSize: 16 } }, "✅"),
             hasContent && React.createElement("div", { style: { color: C.textLight, fontSize: 12, transition: "transform 0.2s", transform: isExpanded ? "rotate(180deg)" : "none" } }, "▼")
