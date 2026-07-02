@@ -989,6 +989,7 @@ function WorkoutPlanTab({ C, userId, userName, googleUser, showToast, haptic }) 
             ),
             React.createElement("div", { style: { fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 99, background: tag.bg, color: tag.color } }, tag.label)
           ),
+          current.timed && current.duration && React.createElement(ExerciseTimer, { C, duration: current.duration, key: `guided-${guidedStep}` }),
           React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } },
             done && React.createElement("div", { style: { fontSize: 16 } }, "✅"),
             hasContent && React.createElement("div", { style: { color: C.textLight, fontSize: 12, transition: "transform 0.2s", transform: isExpanded ? "rotate(180deg)" : "none" } }, "▼")
@@ -1011,10 +1012,17 @@ function WorkoutPlanTab({ C, userId, userName, googleUser, showToast, haptic }) 
                     React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: C.text } }, ex.name),
                     ex.note && React.createElement("div", { style: { fontSize: 11, color: C.textLight, marginTop: 2 } }, ex.note)
                   ),
-                  React.createElement("div", { style: { fontSize: 14, fontWeight: 800, color: C.text, whiteSpace: "nowrap", marginLeft: 10 } },
-                    day.tag === "run" ? `${ex.sets} ${ex.reps}` : `${ex.sets} × ${ex.reps}`
+                  React.createElement("div", { style: { display:"flex", flexDirection:"column", alignItems:"flex-end", gap:4, marginLeft:8 } },
+                    React.createElement("div", { style: { fontSize: 14, fontWeight: 800, color: C.text, whiteSpace: "nowrap" } },
+                      day.tag === "run" ? `${ex.sets} ${ex.reps}` : `${ex.sets} × ${ex.reps}`
+                    ),
+                    ex.timed && ex.duration && React.createElement("button", {
+                      onClick: (e) => { e.stopPropagation(); setActiveTimer(activeTimer === `${dayIdx}-${si}-${ei}` ? null : `${dayIdx}-${si}-${ei}`); },
+                      style: { fontSize:11, fontWeight:700, padding:"2px 8px", borderRadius:6, border:"1px solid "+C.blue+"44", background:C.blue+"15", color:C.blue, cursor:"pointer", fontFamily:"inherit" }
+                    }, activeTimer === `${dayIdx}-${si}-${ei}` ? "Hide ⏱" : "⏱ Timer")
                   )
-                )
+                ),
+                activeTimer === `${dayIdx}-${si}-${ei}` && ex.timed && React.createElement(ExerciseTimer, { C, duration: ex.duration, key: `t-${dayIdx}-${si}-${ei}` })
               )
             )
           ),
