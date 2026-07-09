@@ -993,7 +993,8 @@ function WorkoutPlanTab({ C, userId, userName, googleUser, showToast, haptic, sa
 
       day.tip && React.createElement("div", {
         style: { background: `${C.orange}15`, border: `1px solid ${C.orange}25`, borderRadius: 12, padding: "10px 14px", marginTop: 14, fontSize: 12, color: C.textMid }
-      }, React.createElement("span", { style: { color: C.orange, fontWeight: 800 } }, "Coach tip: "), day.tip)
+      }, React.createElement("span", { style: { color: C.orange, fontWeight: 800 } }, "Coach tip: "), day.tip),
+    React.createElement(PlanEditModal, { C, editingEx, editForm, setEditForm, onSave: saveEdit, onReset: () => editingEx && resetEdit(editingEx.dayIdx, editingEx.si, editingEx.ei), onClose: () => setEditingEx(null), isCustomized: false })
     );
   }
 
