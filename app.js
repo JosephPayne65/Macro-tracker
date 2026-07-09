@@ -891,13 +891,14 @@ function WorkoutPlanTab({ C, userId, userName, googleUser, showToast, haptic, sa
     const isRun = day.tag === "run";
     const setCount = isRun ? 1 : (() => {
       if (!current?.timed) return parseInt(current?.sets) || 3;
-      // Circuit-style timed: sets="45s", reps="×3" → parse rounds from reps
-      const repsNum = parseInt(current?.reps);
-      if (!isNaN(repsNum) && repsNum > 0) return repsNum;
-      // Strength-style timed: sets="3", reps="45 sec" → sets is round count
-      const setsNum = parseInt(current?.sets);
-      if (!isNaN(setsNum) && setsNum > 0) return setsNum;
-      return 1;
+      const r = (current?.reps || "").toLowerCase();
+      const s = (current?.sets || "").toLowerCase();
+      // If reps contains a time unit (sec, s, min) → reps is duration, sets is round count
+      if (/sec|min|\ds$/.test(r)) return parseInt(s) || 1;
+      // If sets contains a time unit → sets is duration, reps is round count
+      if (/sec|min|\ds$/.test(s)) return parseInt(r.replace(/[^\d]/g,"")) || 1;
+      // Fallback: sets is round count
+      return parseInt(s) || 1;
     })();
     const doneCount = Array.from({ length: setCount }, (_, i) =>
       completedSets[`${guidedDay}-${current?.si}-${current?.ei}-${i}`]
@@ -940,7 +941,7 @@ function WorkoutPlanTab({ C, userId, userName, googleUser, showToast, haptic, sa
           }, "✏ Edit")
         ),
         React.createElement("div", { style: { fontSize: 14, color: C.textMid, marginBottom: current.note ? 10 : 16 } },
-          isRun ? `${current.sets} ${current.reps}` : `${current.sets} sets × ${current.reps}`
+          isRun ? `${current.sets} ${current.reps}` : current.timed ? `${current.duration}s × ${(current.reps||'').replace('×','').trim()} rounds` : `${current.sets} sets × ${current.reps}`
         ),
         current.note && React.createElement("div", {
           style: { fontSize: 13, color: C.blue, fontWeight: 700, background: `${C.blue}15`, borderRadius: 10, padding: "8px 12px", marginBottom: 16 }
