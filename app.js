@@ -889,7 +889,7 @@ function WorkoutPlanTab({ C, userId, userName, googleUser, showToast, haptic, sa
     const current = allExercises[guidedStep];
     const isLast = guidedStep >= allExercises.length - 1;
     const isRun = day.tag === "run";
-    const setCount = isRun ? 1 : (parseInt(current?.sets) || 3);
+    const setCount = isRun ? 1 : current?.timed ? 1 : (parseInt(current?.sets) || 3);
     const doneCount = Array.from({ length: setCount }, (_, i) =>
       completedSets[`${guidedDay}-${current?.si}-${current?.ei}-${i}`]
     ).filter(Boolean).length;
@@ -939,7 +939,7 @@ function WorkoutPlanTab({ C, userId, userName, googleUser, showToast, haptic, sa
 
         // Set trackers
         !isRun && React.createElement("div", null,
-          React.createElement("div", { style: { fontSize: 12, color: C.textLight, fontWeight: 700, marginBottom: 8 } }, `${doneCount} / ${setCount} sets done`),
+          React.createElement("div", { style: { fontSize: 12, color: C.textLight, fontWeight: 700, marginBottom: 8 } }, current?.timed ? (doneCount ? "✓ Done" : `Hold ${current.sets}s`) : `${doneCount} / ${setCount} sets done`),
           React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } },
             Array.from({ length: setCount }, (_, i) => {
               const k = `${guidedDay}-${current.si}-${current.ei}-${i}`;
