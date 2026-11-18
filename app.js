@@ -329,10 +329,344 @@ const{useState,useEffect,useRef}=React;const STORAGE_KEY="macro-tracker-data-v2"
   },
 };
 
+// ============================================================
+// 16-WEEK CONDITIONING PLANS: treadmill + rower + strength
+// 4 morning sessions per week. Movements rotate every 4 weeks.
+// Tokens in notes: {H} heavy KB, {M} medium KB, {L} light KB
+// ============================================================
+const P16_PHASES = [
+  { weeks: [1,2,3,4],     name: "Foundation", color: "#4a9eff" },
+  { weeks: [5,6,7,8],     name: "Build",      color: "#e8521a" },
+  { weeks: [9,10,11,12],  name: "Intensify",  color: "#9b59b6" },
+  { weeks: [13,14,15,16], name: "Peak",       color: "#4caf50" },
+];
+
+const P16_FOCUS = {
+  1:  "Benchmark week: 2000m row and 1 mile test. Learn the new movements",
+  2:  "Find your rhythm. Same moves, a few more reps",
+  3:  "Add a set. Longer run intervals",
+  4:  "Deload: fewer sets, stay smooth and fresh",
+  5:  "New movement block. Unilateral work, hill repeats, 500m rowing",
+  6:  "Add a set. Pyramid row and a tempo finish on the treadmill",
+  7:  "Hardest week of the Build block",
+  8:  "Deload: back off before the next phase",
+  9:  "New movement block. Speed intervals and sprint rows",
+  10: "More speed volume. Hold form when it gets hard",
+  11: "Longer hard efforts, 40 on and 20 off",
+  12: "Deload: easy week before the Peak phase",
+  13: "Peak phase. Complexes, ladders, and 2000m pieces",
+  14: "Race pace work on the rower and a 20 minute tempo",
+  15: "Hardest week of the plan. Keep your form when tired",
+  16: "Retest week: 2000m row and 1 mile, compare to week 1",
+};
+
+// strength: [name, reps, unit, note]     timed: [name, null, null, note, seconds]
+const P16_MOVES = {
+  lower: [
+    [ // Phase 1
+      ["Cossack Squat", 8, " ea", "Hold a {L} KB at your chest. Sit into one side, keep the straight leg's heel down"],
+      ["Kickstand RDL", 10, " ea", "{M} KB, back foot resting lightly for balance. Hinge with a flat back"],
+      ["KB Zercher Squat", 10, "", "{H} KB in the crook of your elbows. Chest tall, sit between the hips"],
+      ["Single-Leg Glute Bridge", 12, " ea", "Drive through the heel, pause 1 sec at the top"],
+      ["Standing Calf Raise", 15, "", "Hold a {M} KB at your side. Slow lower, full stretch at the bottom"],
+    ],
+    [ // Phase 2
+      ["TRX-Assisted Pistol Squat to Chair", 6, " ea", "Hold the TRX handles for balance. Sit to a chair, stand without bouncing"],
+      ["Banded Good Morning", 12, "", "Band under the feet and over the shoulders. Hinge until the hamstrings load"],
+      ["KB Clean (Reset Each Rep)", 8, " ea", "{M} KB. Set it down between reps and clean from the floor, keep it close"],
+      ["Hamstring Towel Slides", 10, "", "Towel under the heels on a smooth floor. Slide out slowly, curl back with control"],
+      ["Tibialis Wall Raise", 15, "", "Back on a wall, heels out front, pull the toes up toward your shins"],
+    ],
+    [ // Phase 3
+      ["Banded Monster Walk", 12, " steps ea", "Band above the knees. Stay low in a quarter squat, no knee cave"],
+      ["KB High Pull", 12, "", "{M} KB between the feet. Drive the hips, pull to chest height, elbows high"],
+      ["Wall Sit with KB Hold", null, null, "Hold a {M} KB at your chest, thighs parallel to the floor", 30],
+      ["Frog Pump", 15, "", "Soles of the feet together, drive the hips up, squeeze the glutes"],
+      ["Single-Leg Calf Raise", 12, " ea", "Hold a wall for balance. Full range, 2 sec lower"],
+    ],
+    [ // Phase 4
+      ["KB Jefferson Deadlift", 8, " ea", "{H} KB between the legs, straddle stance. Stand tall without twisting"],
+      ["KB Turkish Get-Up", 3, " ea", "{M} KB. Go slow and keep your eyes on the bell. Quality over reps"],
+      ["Hamstring Walkouts", 8, "", "Bridge position. Walk the heels out and back, hips stay high"],
+      ["Sissy Squat (TRX Handle Assist)", 8, "", "Hold a TRX handle, lean back, knees travel forward. Control the descent"],
+      ["KB Rack Carry", null, null, "{M} KB in the rack position, tall posture. Switch arms each round", 40],
+    ],
+  ],
+  upper: [
+    [ // Phase 1
+      ["DB Floor Press", 10, "", "Elbows touch the floor each rep, pause 1 sec. Pick a DB you can control"],
+      ["Half-Kneeling Single-Arm Press", 8, " ea", "KB or DB. Squeeze the glute on the kneeling side, ribs down"],
+      ["TRX Y-Raise", 10, "", "Walk the feet forward to make it harder. Arms form a Y, shoulder blades down"],
+      ["DB Bent-Over Reverse Fly", 12, "", "Light DBs. Hinge, lead with the elbows, squeeze the shoulder blades"],
+      ["Cross-Body Hammer Curl", 10, " ea", "Curl across the body toward the opposite shoulder, slow lower"],
+    ],
+    [ // Phase 2
+      ["Archer Push-Up", 6, " ea", "Wide hands, shift to one side while the other arm stays straight. Knees down to scale"],
+      ["TRX T-Fly", 10, "", "Body at an angle, arms out wide in a T, thumbs up"],
+      ["Seated Z-Press", 8, "", "Sit on the floor with legs out. Press the DBs overhead without leaning back"],
+      ["KB Gorilla Row", 8, " ea", "Two KBs on the floor, wide stance. Row one then the other, hips stay level"],
+      ["DB Floor Skull Crusher", 10, "", "Lying on the floor, lower the DBs toward your forehead, elbows point up"],
+    ],
+    [ // Phase 3
+      ["Spiderman Push-Up", 8, " ea", "Bring the knee toward the elbow on the way down, hips stay low"],
+      ["TRX Single-Arm Rotational Row", 8, " ea", "Rotate the chest open as you row, slow return"],
+      ["KB Bottoms-Up Press", 6, " ea", "{L} KB held upside down by the handle. Wrist stacked, press slowly"],
+      ["Floor DB Pullover", 12, "", "Lying on the floor, one DB held overhead with both hands. Arc to the chest"],
+      ["TRX Chest Fly", 10, "", "Arms wide, soft elbows, squeeze the handles together at the top"],
+    ],
+    [ // Phase 4
+      ["Pike Push-Up", 8, "", "Hips high, head travels between the hands, feet stay flat"],
+      ["KB Windmill", 6, " ea", "{L} KB overhead. Push the hip out, eyes on the bell"],
+      ["DB High Pull", 10, "", "Hip drive, elbows lead high, control the lower"],
+      ["TRX Archer Row", 8, " ea", "Pull to one side while the other arm stays long, rotate slightly"],
+      ["KB Turkish Get-Up", 2, " ea", "{L} KB. Second get-up day of the week, so keep it light and focus on every position"],
+    ],
+  ],
+  core: [
+    [
+      ["Bird Dog", 10, " ea", "Pause 2 sec at full extension, hips level"],
+      ["Reverse Crunch", 12, "", "Lift the hips off the floor slowly, no momentum"],
+      ["Side Plank with Reach", 8, " ea", "Thread the top arm under the body and open back up"],
+    ],
+    [
+      ["Flutter Kicks", null, null, "Lower back pressed down, small fast kicks", 30],
+      ["Tall-Kneeling Band Chop", 10, " ea", "Band anchored high. Chop down and across, ribs stay stacked"],
+      ["Plank Shoulder Taps", 20, " total", "Feet wide, hips do not rock"],
+    ],
+    [
+      ["V-Ups", 12, "", "Reach hands to toes, lower slowly"],
+      ["KB Halo", 8, " ea direction", "{L} KB around the head, ribs down, slow circles"],
+      ["Bear Crawl Hold", null, null, "Knees an inch off the floor, flat back", 30],
+    ],
+    [
+      ["Suitcase Carry", null, null, "{H} KB in one hand, walk tall, switch hands each round", 40],
+      ["Bicycle Crunch", 20, " total", "Slow and controlled, elbow to opposite knee"],
+      ["Hollow Rocks", 12, "", "Lower back pressed down, rock as one piece"],
+    ],
+  ],
+  circuit: [
+    [
+      ["KB Clean and Press", null, null, "{M} KB. Alternate arms each round, smooth and powerful", 35],
+      ["Bear Crawl", null, null, "Forward and back across the room, hips low", 35],
+      ["Lateral Shuffle", null, null, "Low athletic stance, quick feet, stay on the balls of the feet", 35],
+    ],
+    [
+      ["KB High Pull", null, null, "{M} KB. Drive the hips, pull high, elbows lead", 35],
+      ["Crab Walk", null, null, "Hips up, move forward and back", 35],
+      ["DB Push Press", null, null, "Dip and drive with the legs, feet stay planted", 35],
+    ],
+    [
+      ["Inchworm to Push-Up", null, null, "Walk out, do a push-up, walk back, stand tall", 35],
+      ["KB Clean to Rack Carry", null, null, "{M} KB. Clean it, then walk tall in the rack position", 35],
+      ["DB Devil's Press", null, null, "Two DBs. Push-up on the DBs, then drive both overhead with the hips. Feet stay on the floor", 35],
+    ],
+    [
+      ["KB Clean-Press-Carry Complex", null, null, "{M} KB. Clean, press, then carry for the last 10 sec. Switch arms each round", 35],
+      ["DB Man Maker", null, null, "Push-up, row each side, stand and press. Step the feet back and up, stay on the floor", 35],
+      ["KB Plank Drag", null, null, "High plank, drag a {L} KB under the body side to side, hips stay level", 35],
+    ],
+  ],
+};
+
+const P16_PROFILES = {
+  "16wk-conditioning": { H: "53 lb", M: "25 lb", L: "12 lb", swap: {} },
+  "16wk-conditioning-v2": { H: "25 lb", M: "12 lb", L: "12 lb", swap: {
+    "Single-Leg Glute Bridge":   ["Banded Single-Leg Glute Bridge", "Band above the knees. Drive through the heel, pause 1 sec at the top"],
+    "Standing Calf Raise":       ["Bosu Calf Raise", "Stand on the dome of a Bosu, hold a wall. Slow lower, full stretch at the bottom"],
+    "Hamstring Towel Slides":    ["Banded Glute Bridge March", "Band above the knees. Hold the bridge and march the feet slowly, hips level"],
+    "Tibialis Wall Raise":       ["Banded Tibialis Raise", "Seated, band around the forefoot. Pull the toes toward your shins slowly"],
+    "Wall Sit with KB Hold":     ["Wall Sit with Band Press-Out", "Band above the knees, press the knees out into the band, thighs parallel"],
+    "Frog Pump":                 ["Banded Frog Pump", "Band above the knees, soles together. Drive the hips up and squeeze"],
+    "Hamstring Walkouts":        ["Banded Hamstring Walkouts", "Band above the knees. Walk the heels out and back, hips stay high"],
+    "Single-Leg Calf Raise":     ["Bosu Single-Leg Calf Raise", "Dome of the Bosu, hold a wall. Full range, 2 sec lower"],
+    "DB Bent-Over Reverse Fly":  ["Banded Reverse Fly", "Band held in both hands, hinge, pull the band apart and squeeze the shoulder blades"],
+    "Bird Dog":                  ["Bosu Bird Dog", "Hands on the flat side of a Bosu, dome down. Pause 2 sec, hips level"],
+  } },
+};
+
+function p16Ex(def, idx, pw, weekNum, prof, kind) {
+  const sw = prof.swap[def[0]];
+  const name = sw ? sw[0] : def[0];
+  const note = (sw && sw[1] ? sw[1] : def[3]).replace(/\{H\}/g, prof.H).replace(/\{M\}/g, prof.M).replace(/\{L\}/g, prof.L);
+  let sets;
+  if (weekNum === 16) sets = kind === "circuit" ? 4 : 3;
+  else if (kind === "circuit") sets = [4,4,5,4][pw];
+  else if (kind === "main" && idx < 3) sets = [3,3,4,3][pw];
+  else if (kind === "core") sets = [3,3,3,3][pw];
+  else sets = [3,3,3,2][pw];
+  if (def[4]) {
+    const dur = def[4] + [0,5,10,0][pw];
+    return { name, sets: String(sets), reps: dur + " sec", note, timed: true, duration: dur, est: sets * (dur + 25) / 60 };
+  }
+  const bump = (pw === 1 && def[1] >= 8) ? 2 : 0;
+  return { name, sets: String(sets), reps: (def[1] + bump) + def[2], note, est: sets * 1.3 };
+}
+
+function p16Cardio(w) {
+  const X = (name, sets, reps, note, est) => ({ name, sets, reps, note, est });
+  const cool = X("Cool-down Walk", "1", "3 min easy walk at 0% incline", "Bring the heart rate down before the core work", 3);
+
+  const T = {
+    1:  [X("1 Mile Treadmill Test", "1", "1 mile for time", "Pick a pace you can hold for the whole mile, 1% incline. Log your time and speed. You repeat this in week 16", 11),
+         X("Easy Run/Walk", "4", "1 min run + 1 min walk", "Easy effort after the test, RPE 5", 8)],
+    2:  [X("Run/Walk Intervals", "8", "1 min run + 1 min walk", "Run at RPE 6, walk at 3.0 mph, 1% incline", 16)],
+    3:  [X("Run/Walk Intervals", "8", "2 min run + 1 min walk", "Run at RPE 6 to 7, walk at 3.0 mph, 1% incline", 24)],
+    4:  [X("Run/Walk Intervals", "6", "1 min run + 1 min walk", "Deload week. Keep it smooth and easy", 12)],
+    5:  [X("Hill Repeats", "6", "2 min at 4% incline + 90 sec walk", "Hard but controlled, RPE 7. Walk at 0% between", 21)],
+    6:  [X("Hill Repeats", "6", "2 min at 5% incline + 90 sec walk", "RPE 7. Walk at 0% between", 21),
+         X("Tempo Finish", "1", "5 min steady hard", "RPE 7 to 8 at 1% incline", 5)],
+    7:  [X("Hill Repeats", "5", "2 min at 6% incline + 90 sec walk", "RPE 7 to 8", 17.5),
+         X("Tempo Finish", "1", "8 min steady hard", "RPE 7 to 8 at 1% incline", 8)],
+    8:  [X("Hill Repeats", "4", "2 min at 4% incline + 90 sec walk", "Deload week, RPE 6", 14)],
+    9:  [X("Speed Intervals", "12", "30 sec fast + 30 sec easy", "Fast is RPE 8, easy is a walk or slow jog", 12),
+         X("Easy Jog", "1", "8 min easy", "RPE 5, flush the legs", 8)],
+    10: [X("Speed Intervals", "14", "30 sec fast + 30 sec easy", "Fast is RPE 8, easy is a walk or slow jog", 14),
+         X("Easy Jog", "1", "8 min easy", "RPE 5, flush the legs", 8)],
+    11: [X("Speed Intervals", "12", "40 sec fast + 20 sec easy", "Fast is RPE 8, easy is a walk", 12),
+         X("Easy Jog", "1", "8 min easy", "RPE 5, flush the legs", 8)],
+    12: [X("Speed Intervals", "8", "30 sec fast + 30 sec easy", "Deload week, RPE 7", 8),
+         X("Easy Jog", "1", "10 min easy", "RPE 5, keep it relaxed", 10)],
+    13: [X("Ladder", "2", "1-2-3-2-1 min hard, 1 min easy between", "Hard is RPE 8. Two full rounds, walk 2 min between rounds", 26)],
+    14: [X("Tempo Run", "1", "20 min steady hard", "RPE 7, hold an even pace the whole way", 20),
+         X("Easy Jog", "1", "5 min easy", "RPE 5", 5)],
+    15: [X("Ladder", "1", "2-3-4-3-2 min hard, 90 sec easy between", "Hard is RPE 8. One full round", 20)],
+    16: [X("1 Mile Treadmill Retest", "1", "1 mile for time", "Same incline and approach as week 1. Compare your time and speed", 11),
+         X("Easy Jog", "1", "8 min easy", "RPE 5, flush the legs", 8)],
+  };
+
+  const M = {
+    1:  [X("2000m Row Test", "1", "2000m for time", "Damper 4 to 5. Steady hard, even splits. Log your time and average split. You repeat this in week 16", 10)],
+    2:  [X("Rower Intervals", "4", "250m + 90 sec rest", "Moderate pace RPE 6, damper 4 to 5, 22 to 24 strokes per minute", 10)],
+    3:  [X("Rower Intervals", "5", "250m + 90 sec rest", "RPE 6 to 7, same damper", 13)],
+    4:  [X("Rower Intervals", "3", "250m + 90 sec rest", "Deload week. Smooth and relaxed", 8)],
+    5:  [X("Rower Repeats", "4", "500m + 2 min rest", "RPE 7, hold the same split every rep", 17)],
+    6:  [X("Rower Pyramid", "1", "250m, 500m, 750m, 500m, 250m with 90 sec rest between", "RPE 7. Keep the split steady on the way up and down", 16)],
+    7:  [X("Rower Repeats", "4", "500m + 90 sec rest", "RPE 7 to 8, try to beat last week's split", 14.5)],
+    8:  [X("Rower Repeats", "3", "500m + 2 min rest", "Deload week, RPE 6", 11)],
+    9:  [X("Rower Pieces", "2", "1000m + 3 min rest", "RPE 7. Even splits, second piece matches the first", 12)],
+    10: [X("10/10 Sprints", "3", "8 rounds of 10 sec all out + 10 sec easy, 2 min rest between sets", "All out means all out. Easy means keep the handle moving", 12)],
+    11: [X("Rower Pieces", "3", "750m + 2 min rest", "RPE 7 to 8, hold your pace", 16)],
+    12: [X("Steady Row", "1", "10 min steady", "Deload week. RPE 5, smooth strokes", 10)],
+    13: [X("2000m Piece", "1", "2000m steady hard", "RPE 7 to 8. Even splits, negative split if you can", 9)],
+    14: [X("Race Pace Repeats", "4", "500m + 90 sec rest", "Goal 2000m pace or faster", 14.5)],
+    15: [X("2000m Piece", "1", "2000m, last 500m all out", "Settle in, then empty the tank over the last 500m", 9)],
+    16: [X("2000m Row Retest", "1", "2000m for time", "Same damper and plan as week 1. Compare your time and split", 10)],
+  };
+
+  const R = {
+    1:  [X("Steady Row", "1", "8 min", "Conversational pace, RPE 5, 20 to 22 strokes per minute", 8)],
+    2:  [X("Steady Row", "1", "10 min", "Conversational pace, RPE 5", 10)],
+    3:  [X("Steady Row", "1", "12 min", "Conversational pace, RPE 5", 12)],
+    4:  [X("Steady Row", "1", "8 min", "Deload week. Smooth and easy", 8)],
+    5:  [X("Hard/Easy Rounds", "6", "1 min hard + 1 min easy", "Hard is RPE 8, easy is light strokes", 12)],
+    6:  [X("Hard/Easy Rounds", "7", "1 min hard + 1 min easy", "Hard is RPE 8, easy is light strokes", 14)],
+    7:  [X("Hard/Easy Rounds", "8", "1 min hard + 1 min easy", "Hard is RPE 8, easy is light strokes", 16)],
+    8:  [X("Hard/Easy Rounds", "5", "1 min hard + 1 min easy", "Deload week, hard is RPE 7", 10)],
+    9:  [X("30/30 Rounds", "8", "30 sec hard + 30 sec easy", "Hard is RPE 8 to 9", 8)],
+    10: [X("30/30 Rounds", "10", "30 sec hard + 30 sec easy", "Hard is RPE 8 to 9", 10)],
+    11: [X("30/30 Rounds", "12", "30 sec hard + 30 sec easy", "Hard is RPE 8 to 9", 12)],
+    12: [X("30/30 Rounds", "8", "30 sec hard + 30 sec easy", "Deload week, hard is RPE 7", 8)],
+    13: [X("Pyramid", "1", "1-2-3-2-1 min hard, equal rest", "Hard is RPE 8. Rest by rowing light for the same time", 18)],
+    14: [X("Hard/Easy Rounds", "5", "90 sec hard + 90 sec easy", "Hard is RPE 8 to 9", 15)],
+    15: [X("Hard/Easy Rounds", "6", "90 sec hard + 60 sec easy", "Hard is RPE 8 to 9", 15)],
+    16: [X("Easy Row", "1", "10 min easy", "RPE 4 to 5. Log how the retest week felt", 10)],
+  };
+
+  const pw = (w - 1) % 4;
+  const ph = Math.floor((w - 1) / 4);
+  let inc;
+  if (ph === 0) {
+    const m = [14, 15, 18, 14][pw];
+    inc = [X("Incline Walk", "1", m + " min at 8% incline", "Brisk walk, no handrails, 3.0 to 3.5 mph", m)];
+  } else if (ph === 1) {
+    const r = [5, 6, 6, 5][pw]; const pct = pw === 2 ? 12 : 10;
+    inc = [X("Incline Rounds", String(r), "2 min at " + pct + "% incline + 1 min at 3%", "Brisk walk, no handrails, RPE 7", r * 3)];
+  } else if (ph === 2) {
+    const r = [4, 5, 4, 4][pw]; const top = pw === 2 ? "6, 8, 10, 12, and 14%" : "6, 8, 10, and 12%";
+    inc = [X("Incline Ladder", String(r), "1 min each at " + top, "Brisk walk, no handrails. Reset to 6% between rounds", r * (pw === 2 ? 5 : 4))];
+  } else {
+    const o = [["15 min at 12% incline", 15, "Fastest walk you can hold, no handrails"],
+               ["16 min at 12% incline", 16, "Fastest walk you can hold, no handrails"],
+               ["16 min at 14% incline", 16, "Fastest walk you can hold, no handrails"],
+               ["14 min at 4% incline", 14, "Retest week recovery. Easy and relaxed"]][pw];
+    inc = [X("Max Incline Walk", "1", o[0], o[2], o[1])];
+  }
+  return { tread: T[w].concat([cool]), rowMon: M[w], rowThu: R[w], incline: inc };
+}
+
+function build16WeekDays(planId, weekNum) {
+  const prof = P16_PROFILES[planId] || P16_PROFILES["16wk-conditioning"];
+  const pw = (weekNum - 1) % 4;
+  const ph = Math.floor((weekNum - 1) / 4);
+  const c = p16Cardio(weekNum);
+  const mk = (arr, kind) => arr.map((d, i) => p16Ex(d, i, pw, weekNum, prof, kind));
+  const deload = pw === 3 && weekNum !== 16;
+  const retest = weekNum === 1 || weekNum === 16;
+  const phaseNote = [
+    "New movement block for 4 weeks. Learn the patterns before adding load.",
+    "New movement block. More single-leg and rotational work.",
+    "New movement block. Speed and power, with no jumping.",
+    "New movement block. Complexes and heavier carries.",
+  ][ph];
+  const tipOf = (base) => (deload ? "Deload week: fewer sets, keep the effort smooth. " : "") + base;
+  const rest = (label, name, tip) => ({ label, name, tag: "rest", duration: "", warmup: null, sections: [], tip });
+
+  return [
+    { label: "MON", name: "Lower Body + Rower", tag: "strength", duration: "40 to 45 min",
+      warmup: "5 min: easy rower, hip circles, bodyweight good mornings, cat-cow",
+      sections: [
+        { title: "Lower Body", exercises: mk(P16_MOVES.lower[ph], "main") },
+        { title: retest ? "Rower Benchmark" : "Rower Intervals", exercises: c.rowMon },
+      ],
+      tip: tipOf(retest ? "Do the 2000m row at the end and log your time. It is your benchmark for week 16." : phaseNote) },
+    { label: "TUE", name: "Treadmill Intervals + Core", tag: "cardio", duration: "35 to 45 min",
+      warmup: "5 min treadmill: walk to an easy jog, leg swings",
+      sections: [
+        { title: retest ? "Treadmill Benchmark" : "Treadmill", exercises: c.tread },
+        { title: "Core", exercises: mk(P16_MOVES.core[ph], "core") },
+      ],
+      tip: tipOf(retest ? "The mile test sets your baseline. Run it evenly rather than starting too fast." : "RPE 6 is a steady effort you could talk through in short phrases. RPE 8 is hard enough that you only want to say a word or two.") },
+    rest("WED", "Open Day", "Open day. An easy 20 to 30 minute walk is a good use of it if you feel like moving."),
+    { label: "THU", name: "Upper Body + Rower Finisher", tag: "strength", duration: "40 to 45 min",
+      warmup: "5 min: easy rower, arm circles, band pull-aparts, scap push-ups",
+      sections: [
+        { title: "Upper Body", exercises: mk(P16_MOVES.upper[ph], "main") },
+        { title: "Rower Finisher", exercises: c.rowThu },
+      ],
+      tip: tipOf(phaseNote) },
+    rest("FRI", "Open Day", "Open day. Rest, or an easy walk if you want it."),
+    { label: "SAT", name: "Conditioning Circuit + Incline Finisher", tag: "circuit", duration: "35 to 40 min",
+      warmup: "5 min: leg swings, hip circles, arm swings, easy marching",
+      sections: [
+        { title: "Conditioning Circuit", exercises: mk(P16_MOVES.circuit[ph], "circuit") },
+        { title: "Treadmill Incline Finisher", exercises: c.incline },
+      ],
+      tip: tipOf("Work the timer, rest about 20 sec, then move on. Keep every rep clean even when your heart rate is up.") },
+    rest("SUN", "Full Rest", "Full rest. Sleep well and prep food for the week."),
+  ];
+}
+
+WORKOUT_PLAN_DATA["16wk-conditioning"] = {
+  id: "16wk-conditioning",
+  name: "16-Week Conditioning: Treadmill + Rower",
+  description: "4 morning sessions, 30 to 45 min · TRX · DB · KB (12, 25, 53 lb) · Treadmill · Rower",
+  totalWeeks: 16, daysPerWeek: 4,
+  phases: P16_PHASES, weekFocus: P16_FOCUS, baseDays: [],
+};
+WORKOUT_PLAN_DATA["16wk-conditioning-v2"] = {
+  id: "16wk-conditioning-v2",
+  name: "16-Week Conditioning: Treadmill + Rower (Bosu + Bands)",
+  description: "4 morning sessions, 30 to 45 min · TRX · DB · KB · Bosu · Bands · Treadmill · Rower",
+  totalWeeks: 16, daysPerWeek: 4,
+  phases: P16_PHASES, weekFocus: P16_FOCUS, baseDays: [],
+};
+
+
 // Builds a specific week's days with progressive overload applied
 function buildWeekDays(planId, weekNum) {
   const plan = WORKOUT_PLAN_DATA[planId];
   if (!plan) return [];
+  if (planId.indexOf("16wk-") === 0) return build16WeekDays(planId, weekNum);
   const base = JSON.parse(JSON.stringify(plan.baseDays));
 
   // ── Deload week 5 ─────────────────────────────────────────
@@ -741,6 +1075,7 @@ function WorkoutPlanTab({ C, userId, userName, googleUser, showToast, haptic, sa
     strength: { bg: "rgba(245,166,35,0.15)", color: "#d4944a", label: "Strength" },
     run:      { bg: "rgba(76,175,80,0.15)",  color: "#4caf50", label: "Run"      },
     circuit:  { bg: "rgba(232,82,26,0.15)",  color: "#e8521a", label: "Circuit"  },
+    cardio:   { bg: "rgba(74,158,255,0.12)", color: "#4a9eff", label: "Cardio"   },
     active:   { bg: "rgba(74,158,255,0.12)", color: "#4a9eff", label: "Recovery" },
     rest:     { bg: C.border,                color: C.textLight, label: "Rest"   },
   };
@@ -849,7 +1184,7 @@ function WorkoutPlanTab({ C, userId, userName, googleUser, showToast, haptic, sa
             // Count completed days for this user
             const doneCount = Object.values(user.progress[user.planId] || {})
               .flatMap(w => Object.values(w)).filter(Boolean).length;
-            const pct = userPlan ? Math.round(doneCount / (userPlan.totalWeeks * 5) * 100) : 0; // 5 active days/week
+            const pct = userPlan ? Math.round(doneCount / (userPlan.totalWeeks * (userPlan.daysPerWeek || 5)) * 100) : 0; // 5 active days/week
 
             return React.createElement("div", {
               key: uid,
@@ -941,7 +1276,7 @@ function WorkoutPlanTab({ C, userId, userName, googleUser, showToast, haptic, sa
           }, "✏ Edit")
         ),
         React.createElement("div", { style: { fontSize: 14, color: C.textMid, marginBottom: current.note ? 10 : 16 } },
-          isRun ? `${current.sets} ${current.reps}` : current.timed ? `${current.duration}s × ${(current.reps||'').replace('×','').trim()} rounds` : `${current.sets} sets × ${current.reps}`
+          isRun ? `${current.sets} ${current.reps}` : current.timed ? `${current.duration}s × ${setCount} rounds` : `${current.sets} sets × ${current.reps}`
         ),
         current.note && React.createElement("div", {
           style: { fontSize: 13, color: C.blue, fontWeight: 700, background: `${C.blue}15`, borderRadius: 10, padding: "8px 12px", marginBottom: 16 }
@@ -1117,7 +1452,7 @@ function WorkoutPlanTab({ C, userId, userName, googleUser, showToast, haptic, sa
                   ),
                   React.createElement("div", { style: { display:"flex", flexDirection:"column", alignItems:"flex-end", gap:4, marginLeft:8 } },
                     React.createElement("div", { style: { fontSize: 14, fontWeight: 800, color: C.text, whiteSpace: "nowrap" } },
-                      (()=>{ const cx=getExercise(assignedPlanId,selectedWeek,dayIdx,si,ei,ex); return day.tag==="run"?`${cx.sets} ${cx.reps}`:cx.timed?`${cx.sets}s`:`${cx.sets} × ${cx.reps}`; })()
+                      (()=>{ const cx=getExercise(assignedPlanId,selectedWeek,dayIdx,si,ei,ex); return day.tag==="run"?`${cx.sets} ${cx.reps}`:cx.timed?(/sec|min|\ds$/i.test(String(cx.sets))?`${String(cx.reps).replace("×","").trim()} × ${cx.sets}`:`${cx.sets} × ${cx.reps}`):`${cx.sets} × ${cx.reps}`; })()
                     ),
                     ex.timed && ex.duration && React.createElement("button", {
                       onClick: (e) => { e.stopPropagation(); setActiveTimer(activeTimer === `${dayIdx}-${si}-${ei}` ? null : `${dayIdx}-${si}-${ei}`); },
