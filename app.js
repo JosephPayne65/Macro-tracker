@@ -861,7 +861,7 @@ function WorkoutPlanTab({ C, userId, userName, googleUser, showToast, haptic, sa
 
   // Your UID — replace with your actual Firebase UID
   // Find it in Firebase console > Authentication, or add a console.log(userId) temporarily
-  const ADMIN_UID = "REPLACE_WITH_YOUR_FIREBASE_UID";
+  const ADMIN_UID = "Zb0aByrvCMSlff0JjCU2Lz6nz1P2";
   const isAdmin = userId === ADMIN_UID;
 
   // ── Firebase sync ─────────────────────────────────────────
