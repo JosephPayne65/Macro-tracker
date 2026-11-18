@@ -1032,19 +1032,27 @@ function WorkoutPlanTab({ C, userId, userName, googleUser, showToast, haptic, sa
 
   // ── Admin actions ─────────────────────────────────────────
   const assignPlan = async () => {
-    if (!assignEmail.trim()) return;
-    // Look up UID by email via userNames
-    const snap = await db.ref("userNames").orderByChild("email").equalTo(assignEmail.trim().toLowerCase()).get();
-    const data = snap.val();
-    if (!data) {
-      showToast("User not found — they need to sign in first", "error");
-      return;
+    const q = assignEmail.trim().toLowerCase();
+    if (!q) { showToast("Enter an email or UID first", "error"); return; }
+    try {
+      let uid = null, name = q;
+      if (q.indexOf("@") === -1 && assignEmail.trim().length > 20) {
+        uid = assignEmail.trim();
+      } else {
+        const snap = await db.ref("userNames").once("value");
+        const all = snap.val() || {};
+        const hit = Object.keys(all).find(k => String((all[k] && all[k].email) || "").toLowerCase() === q);
+        if (!hit) { showToast("User not found. They need to sign in once, or paste their UID", "error"); return; }
+        uid = hit; name = all[hit].name || q;
+      }
+      await db.ref("userPlanAssignments/" + uid).set(assignPlanId);
+      showToast("Plan assigned to " + name + " ✓");
+      setAssignEmail("");
+      haptic("success");
+    } catch (err) {
+      console.error("assignPlan failed", err);
+      showToast("Assign failed: " + (err && err.message ? err.message : err), "error");
     }
-    const uid = Object.keys(data)[0];
-    await db.ref("userPlanAssignments/" + uid).set(assignPlanId);
-    showToast(`Plan assigned to ${data[uid].name || assignEmail} ✓`);
-    setAssignEmail("");
-    haptic("success");
   };
 
   const removePlan = async (uid) => {
@@ -1147,7 +1155,7 @@ function WorkoutPlanTab({ C, userId, userName, googleUser, showToast, haptic, sa
       React.createElement("div", { style: { background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 16, marginBottom: 14 } },
         React.createElement("div", { style: { fontSize: 14, fontWeight: 800, color: C.text, marginBottom: 12 } }, "Assign Plan to User"),
         React.createElement("input", {
-          placeholder: "their@email.com (must be signed in once)",
+          placeholder: "their email or UID",
           value: assignEmail,
           onChange: e => setAssignEmail(e.target.value),
           style: { width: "100%", background: C.bg, border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "10px 14px", color: C.text, fontSize: 14, outline: "none", boxSizing: "border-box", fontFamily: "inherit", marginBottom: 10 }
