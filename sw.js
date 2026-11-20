@@ -1,4 +1,6 @@
-const CACHE_NAME = "macro-tracker-v3";
+importScripts("/push-handler.js");
+
+const CACHE_NAME = "macro-tracker-v4";
 const ASSETS = ["/", "/index.html"];
 
 self.addEventListener("install", (e) => {
@@ -18,11 +20,13 @@ self.addEventListener("activate", (e) => {
 });
 
 self.addEventListener("fetch", (e) => {
+  // Only cache plain GET requests (fixes the POST cache.put console errors)
+  if (e.request.method !== "GET") return;
   e.respondWith(
     fetch(e.request)
       .then((res) => {
         const resClone = res.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(e.request, resClone));
+        caches.open(CACHE_NAME).then((cache) => cache.put(e.request, resClone)).catch(() => {});
         return res;
       })
       .catch(() => caches.match(e.request))
